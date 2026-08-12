@@ -1,0 +1,10 @@
+{
+  "name": "katofit-web",
+  "version": "0.1.0",
+  "description": "Frontend de Katö — SPA sin frameworks, construida con html.js.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "node server.js"
+  }
+}

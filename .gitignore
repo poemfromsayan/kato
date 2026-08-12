@@ -1,0 +1,27 @@
+# Dependencias
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Variables de entorno y secretos — NUNCA subir un .env real
+.env
+.env.*
+!.env.example
+
+# Archivos subidos por usuarios (PDFs de planes nutricionales, etc.)
+apps/api/uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Build output
+dist/
+build/

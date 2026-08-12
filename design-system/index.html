@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light" data-accent="lima">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Katö — Sistema de Diseño</title>
+  <meta name="description" content="Sistema de diseño de Katö: tokens de color, tipografía y componentes para la app de nutrición y comparación de precios." />
+
+  <!-- Archivo único y portable: CSS y JS embebidos para poder abrirse con doble clic (file://)
+       sin servidor local. El script es un bundle sin imports (generado con esbuild a partir
+       de los módulos fuente en js/), así que no dispara el bloqueo CORS que los navegadores
+       aplican a <script type="module"> cuando se abre un archivo local.
+
+       CSP: script-src está fijado al hash SHA-256 exacto de este bundle, así que solo ESTE
+       script puede ejecutarse (cualquier script inyectado, aunque se cuele en el HTML, queda
+       bloqueado). style-src necesita 'unsafe-inline' porque html.js aplica estilos dinámicos
+       vía JS (Object.assign(e.style, ...)) para valores calculados en tiempo real (ancho de
+       barras de macros, color de acento activo, etc.) — eso es lo que permite que el mismo
+       componente reaccione al selector de acento y de tema sin recargar la página. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self' 'sha256-u2PFBiBOmci6Go5zAKDXBwa99TgMpTbYmomfonL79nA='; connect-src 'none'; base-uri 'none'; form-action 'self'; object-src 'none';" />
+  <meta name="referrer" content="no-referrer" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+/**
+ * tokens.css — Katö Design System
+ * Design tokens: color, tipografía, spacing, radius, sombras.
+ * Tema (claro/oscuro) y acento se controlan con atributos en <html>:
+ *   <html data-theme="dark" data-accent="lima">
+ */
+
+:root {
+  /* ---------- Tipografía ---------- */
+  --font-sans: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Space Mono', 'SFMono-Regular', Consolas, monospace;
+
+  --fs-display: 3.052rem;
+  --fs-h1: 2.441rem;
+  --fs-h2: 1.953rem;
+  --fs-h3: 1.563rem;
+  --fs-h4: 1.25rem;
+  --fs-body-lg: 1.125rem;
+  --fs-body: 1rem;
+  --fs-caption: 0.875rem;
+  --fs-micro: 0.75rem;
+
+  --lh-tight: 1.1;
+  --lh-snug: 1.3;
+  --lh-normal: 1.55;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-bold: 700;
+
+  /* ---------- Spacing (base 4px) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---------- Radius ---------- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* ---------- Motion ---------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-normal: 200ms;
+
+  /* ---------- Escala neutra (monocromática) ---------- */
+  --gray-950: #0a0a0b;
+  --gray-900: #121214;
+  --gray-800: #1c1c1f;
+  --gray-700: #2a2a2e;
+  --gray-600: #3f3f46;
+  --gray-500: #6b6b72;
+  --gray-400: #94949f;
+  --gray-300: #c2c2cc;
+  --gray-200: #e2e2e7;
+  --gray-100: #f0f0f3;
+  --gray-50: #fafafb;
+  --white: #ffffff;
+
+  /* ---------- Semántico (independiente del acento) ---------- */
+  --success-500: #10b981;
+  --success-100: #d1fae5;
+  --warning-500: #f59e0b;
+  --warning-100: #fef3c7;
+  --error-500: #ef4444;
+  --error-100: #fee2e2;
+  --info-500: #3b82f6;
+  --info-100: #dbeafe;
+
+  /* ---------- Sombras (modo claro por defecto) ---------- */
+  --shadow-sm: 0 1px 2px rgba(10, 10, 11, 0.06);
+  --shadow-md: 0 4px 12px rgba(10, 10, 11, 0.08);
+  --shadow-lg: 0 12px 32px rgba(10, 10, 11, 0.12);
+  --shadow-glow: 0 8px 24px var(--accent-glow, rgba(196, 248, 42, 0.35));
+}
+
+/* ================= Acentos intercambiables ================= */
+/* Cada acento define su escala + color de texto que va ENCIMA del acento (contraste) */
+
+[data-accent='lima'] {
+  --accent-100: #eefec2;
+  --accent-400: #d4fb5e;
+  --accent-500: #c4f82a;
+  --accent-600: #a3d418;
+  --accent-700: #7ea70f;
+  --accent-contrast: var(--gray-950);
+  --accent-glow: rgba(196, 248, 42, 0.35);
+}
+
+[data-accent='coral'] {
+  --accent-100: #ffe1e2;
+  --accent-400: #ff8286;
+  --accent-500: #ff5a5f;
+  --accent-600: #e83f45;
+  --accent-700: #c22a30;
+  --accent-contrast: var(--white);
+  --accent-glow: rgba(255, 90, 95, 0.35);
+}
+
+[data-accent='azul'] {
+  --accent-100: #dde3ff;
+  --accent-400: #7c8cff;
+  --accent-500: #3d5aff;
+  --accent-600: #2a41e0;
+  --accent-700: #1c2eb0;
+  --accent-contrast: var(--white);
+  --accent-glow: rgba(61, 90, 255, 0.35);
+}
+
+[data-accent='violeta'] {
+  --accent-100: #ede4ff;
+  --accent-400: #ab86f7;
+  --accent-500: #8b5cf6;
+  --accent-600: #7440e0;
+  --accent-700: #5b2eb3;
+  --accent-contrast: var(--white);
+  --accent-glow: rgba(139, 92, 246, 0.35);
+}
+
+/* ================= Tema claro (por defecto) ================= */
+:root,
+[data-theme='light'] {
+  --bg: var(--gray-50);
+  --surface: var(--white);
+  --surface-2: var(--gray-100);
+  --border: var(--gray-200);
+  --border-strong: var(--gray-300);
+  --text: var(--gray-950);
+  --text-muted: var(--gray-600);
+  --text-subtle: var(--gray-500);
+  --overlay: rgba(10, 10, 11, 0.45);
+}
+
+/* ================= Tema oscuro ================= */
+[data-theme='dark'] {
+  --bg: var(--gray-950);
+  --surface: var(--gray-900);
+  --surface-2: var(--gray-800);
+  --border: var(--gray-700);
+  --border-strong: var(--gray-600);
+  --text: var(--gray-50);
+  --text-muted: var(--gray-300);
+  --text-subtle: var(--gray-400);
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+/**
+ * base.css — Reset + estilos base del documento.
+ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  transition: background-color var(--dur-normal) var(--ease-out),
+              color var(--dur-normal) var(--ease-out);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+::selection {
+  background: var(--accent-400);
+  color: var(--accent-contrast);
+}
+
+/* Foco visible accesible en toda la app */
+:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- Layout de la página del sistema de diseño ---------- */
+
+.ds-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6) var(--space-16);
+}
+
+.ds-section {
+  margin-top: var(--space-16);
+  scroll-margin-top: 90px;
+}
+
+.ds-section__head {
+  margin-bottom: var(--space-6);
+}
+
+.ds-section__eyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-600);
+  margin-bottom: var(--space-2);
+}
+
+.ds-section__title {
+  font-size: var(--fs-h2);
+}
+
+.ds-section__desc {
+  margin-top: var(--space-2);
+  max-width: 60ch;
+}
+
+.ds-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.ds-grid--2 { grid-template-columns: repeat(2, 1fr); }
+.ds-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.ds-grid--4 { grid-template-columns: repeat(4, 1fr); }
+.ds-grid--auto { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+
+@media (max-width: 720px) {
+  .ds-grid--2, .ds-grid--3, .ds-grid--4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+/**
+ * components.css — Componentes visuales del sistema de diseño Katö.
+ */
+
+/* ===================== Topbar ===================== */
+
+.ds-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-6);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.ds-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-body-lg);
+}
+
+.ds-logo__mark {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-500);
+  display: grid;
+  place-items: center;
+  color: var(--accent-contrast);
+  font-family: var(--font-sans);
+  font-weight: var(--fw-bold);
+}
+
+.ds-topbar__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ---- Selector de acento ---- */
+
+.ds-accent-picker {
+  display: flex;
+  gap: var(--space-2);
+  padding: 4px;
+  background: var(--surface-2);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+}
+
+.ds-accent-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast);
+}
+
+.ds-accent-swatch:hover { transform: scale(1.1); }
+
+.ds-accent-swatch[aria-pressed='true'] {
+  border-color: var(--text);
+}
+
+/* ---- Toggle claro/oscuro ---- */
+
+.ds-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.ds-theme-toggle:hover { background: var(--border); }
+
+/* ===================== Swatches de color ===================== */
+
+.ds-swatch {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.ds-swatch__fill {
+  height: 64px;
+}
+
+.ds-swatch__label {
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+}
+
+/* ===================== Especímenes tipográficos ===================== */
+
+.ds-type-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-5) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.ds-type-row__meta {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--text-subtle);
+  text-align: right;
+}
+
+.ds-mono-figure {
+  font-family: var(--font-mono);
+}
+
+/* ===================== Spacing & radius scale ===================== */
+
+.ds-scale-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+}
+
+.ds-scale-row__bar {
+  height: 12px;
+  background: var(--accent-500);
+  border-radius: var(--radius-sm);
+}
+
+.ds-scale-row__label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.ds-radius-box {
+  width: 100%;
+  aspect-ratio: 1.4;
+  background: var(--surface-2);
+  border: 1px dashed var(--border-strong);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+}
+
+/* ===================== Shadow cards ===================== */
+
+.ds-shadow-card {
+  padding: var(--space-6);
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+}
+
+/* ===================== Botones ===================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
+  white-space: nowrap;
+}
+
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn--md { padding: 10px 18px; font-size: var(--fs-body); }
+.btn--sm { padding: 7px 14px; font-size: var(--fs-caption); }
+.btn--lg { padding: 14px 24px; font-size: var(--fs-body-lg); border-radius: var(--radius-lg); }
+
+.btn--primary {
+  background: var(--accent-500);
+  color: var(--accent-contrast);
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--accent-600);
+  box-shadow: var(--shadow-glow);
+}
+
+.btn--secondary {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+.btn--secondary:hover:not(:disabled) { background: var(--border); }
+
+.btn--ghost {
+  background: transparent;
+  color: var(--text);
+}
+.btn--ghost:hover:not(:disabled) { background: var(--surface-2); }
+
+.btn--danger {
+  background: var(--error-500);
+  color: var(--white);
+}
+.btn--danger:hover:not(:disabled) { filter: brightness(0.92); }
+
+.btn--icon {
+  padding: 10px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* ===================== Formularios ===================== */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field__label {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
+}
+
+.input, .select {
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  width: 100%;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.input::placeholder { color: var(--text-subtle); }
+
+.input:focus, .select:focus {
+  border-color: var(--accent-500);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-100);
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-group__icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  pointer-events: none;
+}
+
+.input-group .input { padding-left: 36px; }
+
+/* Checkbox / Radio */
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.check-row input[type='checkbox'],
+.check-row input[type='radio'] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-500);
+  cursor: pointer;
+}
+
+/* Toggle switch */
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.switch__track {
+  position: absolute;
+  inset: 0;
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.switch__track::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  background: var(--white);
+  border-radius: 50%;
+  transition: transform var(--dur-fast) var(--ease-out);
+  box-shadow: var(--shadow-sm);
+}
+
+.switch input:checked + .switch__track {
+  background: var(--accent-500);
+}
+
+.switch input:checked + .switch__track::before {
+  transform: translateX(18px);
+}
+
+/* ===================== Badges / Tags ===================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: var(--radius-full);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-medium);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.badge--accent { background: var(--accent-100); color: var(--accent-700); }
+.badge--success { background: var(--success-100); color: color-mix(in srgb, var(--success-500) 70%, black); }
+.badge--warning { background: var(--warning-100); color: color-mix(in srgb, var(--warning-500) 65%, black); }
+.badge--error { background: var(--error-100); color: color-mix(in srgb, var(--error-500) 65%, black); }
+.badge--neutral { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+
+/* ===================== Cards ===================== */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Producto: comparación de precios entre supermercados */
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.product-card__top {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.product-card__thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+}
+
+.product-card__title {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+  margin: 0 0 2px;
+}
+
+.product-card__sub {
+  font-size: var(--fs-micro);
+  color: var(--text-subtle);
+}
+
+.product-card__stores {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-3);
+}
+
+.store-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--fs-caption);
+}
+
+.store-row__name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+}
+
+.store-row__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.store-row__price {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+}
+
+.store-row--best .store-row__price { color: var(--success-500); }
+
+/* Nutrición: macros */
+
+.nutrition-card__title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-4);
+}
+
+.macro-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 52px;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.macro-row__label {
+  font-size: var(--fs-micro);
+  color: var(--text-muted);
+}
+
+.macro-row__value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  text-align: right;
+  color: var(--text-subtle);
+}
+
+.macro-bar {
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.macro-bar__fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+}
+
+/* ===================== Navegación ===================== */
+
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: var(--space-2) var(--space-2) var(--space-3);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+.bottom-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--text-subtle);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+}
+
+.bottom-nav__item span:first-child {
+  font-size: 18px;
+}
+
+.bottom-nav__item--active {
+  color: var(--accent-600);
+}
+
+/* ===================== Feedback: alertas ===================== */
+
+.alert {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-caption);
+  border: 1px solid transparent;
+}
+
+.alert--success { background: var(--success-100); color: color-mix(in srgb, var(--success-500) 60%, black); }
+.alert--warning { background: var(--warning-100); color: color-mix(in srgb, var(--warning-500) 55%, black); }
+.alert--error { background: var(--error-100); color: color-mix(in srgb, var(--error-500) 55%, black); }
+.alert--info { background: var(--info-100); color: color-mix(in srgb, var(--info-500) 55%, black); }
+
+/* ===================== Modal ===================== */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: var(--space-4);
+}
+
+.modal-backdrop.is-open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  max-width: 420px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+}
+
+.dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  color: var(--text-subtle);
+  font-size: var(--fs-caption);
+  margin-bottom: var(--space-5);
+}
+
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+/* ===================== Phone frame (mockups reales) ===================== */
+
+.phone-frame {
+  width: 300px;
+  border-radius: 40px;
+  background: var(--surface);
+  border: 8px solid var(--gray-950);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme='dark'] .phone-frame {
+  border-color: var(--gray-700);
+}
+
+.phone-frame__notch {
+  height: 22px;
+  background: var(--gray-950);
+  border-radius: 0 0 14px 14px;
+  width: 110px;
+  margin: 0 auto;
+}
+
+.phone-frame__screen {
+  flex: 1;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 520px;
+}
+
+.phone-frame__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.phone-mockups {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.phone-mockups__caption {
+  text-align: center;
+  margin-top: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--text-subtle);
+}
+
+  </style>
+</head>
+<body>
+
+  <header class="ds-topbar">
+    <div class="ds-logo">
+      <span class="ds-logo__mark">K</span>
+      Katö · Sistema de Diseño
+    </div>
+    <div class="ds-topbar__controls">
+      <span id="topbar-accent"></span>
+      <span id="topbar-theme"></span>
+    </div>
+  </header>
+
+  <main class="ds-page">
+
+    <section class="ds-section" style="margin-top: var(--space-8);">
+      <p style="max-width: 62ch; font-size: var(--fs-body-lg); color: var(--text-muted);">
+        Esta página reúne los tokens y componentes base de Katö antes de escribir la app.
+        Usa el selector de acento y el interruptor de tema en la esquina superior derecha para
+        probar combinaciones en vivo — todo lo que ves aquí está construido con
+        <code>html.js</code>, el mismo framework que usará la aplicación.
+      </p>
+    </section>
+
+    <!-- ===================== Color ===================== -->
+    <section class="ds-section" id="color">
+      <div class="ds-section__head">
+        <span class="ds-section__eyebrow">Tokens</span>
+        <h2 class="ds-section__title">Color</h2>
+        <p class="ds-section__desc">Escala neutra monocromática + un único acento intercambiable, más colores semánticos fijos para estados.</p>
+      </div>
+
+      <h4 style="margin-bottom: var(--space-3); color: var(--text-muted); font-size: var(--fs-caption);">Neutrales</h4>
+      <div class="ds-grid ds-grid--auto" id="color-neutrals"></div>
+
+      <h4 style="margin: var(--space-6) 0 var(--space-3); color: var(--text-muted); font-size: var(--fs-caption);">Acento (cambia con el selector superior)</h4>
+      <div class="ds-grid ds-grid--auto" id="color-accent"></div>
+
+      <h4 style="margin: var(--space-6) 0 var(--space-3); color: var(--text-muted); font-size: var(--fs-caption);">Semántico</h4>
+      <div class="ds-grid ds-grid--4" id="color-semantic"></div>
+    </section>
+
+    <!-- ===================== Tipografía ===================== -->
+    <section class="ds-section" id="tipografia">
+      <div class="ds-section__head">
+        <span class="ds-section__eyebrow">Tokens</span>
+        <h2 class="ds-section__title">Tipografía</h2>
+        <p class="ds-section__desc">Space Grotesk para interfaz y texto, Space Mono para todo dato numérico: precios, porcentajes, cantidades.</p>
+      </div>
+      <div id="type-scale"></div>
+    </section>
+
+    <!-- ===================== Spacing & Radius ===================== -->
+    <section class="ds-section" id="espaciado">
+      <div class="ds-section__head">
+        <span class="ds-section__eyebrow">Tokens</span>
+        <h2 class="ds-section__title">Espaciado &amp; radios</h2>
+        <p class="ds-section__desc">Escala de 4px como unidad base. Radios generosos para reforzar el tono moderno y cercano.</p>
+      </div>
+      <div class="ds-grid ds-grid--2" style="align-items: start;">
+        <div id="spacing-scale"></div>
+        <div class="ds-grid ds-grid--auto" id="radius-scale"></div>
+      </div>
+    </section>
+
+    <!-- ===================== Sombras ===================== -->
+    <section class="ds-section" id="elevacion">
+      <div class="ds-section__head">
+        <span class="ds-section__eyebrow">Tokens</span>
+        <h2 class="ds-section__title">Elevación</h2>
+        <p class="ds-section__desc">Sombras suaves para jerarquía + un "glow" de acento para estados destacados (ej. mejor precio).</p>
+      </div>
+      <div class="ds-grid ds-grid--4" id="shadow-scale"></div>
+    </section>
+
+    <!-- ===================== Botones ===================== -->
+    <section class="ds-section" id="botones">
+      <div class="ds-section__head">
+        <span class="ds-section__eyebrow">Componentes</span>
+        <h2 class="ds-section__title">Botones</h2>
+      </div>
+      <div class="ds-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px,auto)); margin-bottom: var(--space-4);" id="buttons-variants"></div>
+      <div class="ds-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px,auto)); margin-bottom: var(--space-4); align-items: center;" id="buttons-sizes"></div>
+      <div class="ds-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px,auto)); align-items: center;" id="buttons-states"></div>
+    </section>
+
+    <!-- ===================== Formularios ===================== -->
+    <section class="ds-section" id="formularios">
+      <div class="ds-section__head">
+        <span class="ds-section__eyebrow">Componentes</span>
+        <h2 class="ds-section__title">Formularios</h2>
+      </div>
+      <div class="ds-grid ds-grid--2" id="forms-showcase"></div>
+    </section>
+
+    <!-- ===================== Badges ===================== -->
+    <section class="ds-section" id="badges">
+      <div class="ds-section__head">
+        <span class="ds-section__eyebrow">Componentes</span>
+        <h2 class="ds-section__title">Etiquetas &amp; badges</h2>
+        <p class="ds-section__desc">Para señalar comparaciones de precio y atributos nutricionales de un vistazo.</p>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap: var(--space-2);" id="badges-showcase"></div>
+    </section>
+
+    <!-- ===================== Cards ===================== -->
+    <section class="ds-section" id="cards">
+      <div class="ds-section__head">
+        <span class="ds-section__eyebrow">Componentes</span>
+        <h2 class="ds-section__title">Tarjetas</h2>
+        <p class="ds-section__desc">Los dos bloques centrales del producto: comparación de precio por supermercado y resumen de macros.</p>
+      </div>
+      <div class="ds-grid ds-grid--2" id="cards-showcase"></div>
+    </section>
+
+    <!-- ===================== Navegación ===================== -->
+    <section class="ds-section" id="navegacion">
+      <div class="ds-section__head">
+        <span class="ds-section__eyebrow">Componentes</span>
+        <h2 class="ds-section__title">Navegación</h2>
+      </div>
+      <div style="max-width: 360px;" id="nav-showcase"></div>
+    </section>
+
+    <!-- ===================== Feedback ===================== -->
+    <section class="ds-section" id="feedback">
+      <div class="ds-section__head">
+        <span class="ds-section__eyebrow">Componentes</span>
+        <h2 class="ds-section__title">Feedback &amp; modal</h2>
+        <p class="ds-section__desc">Alertas de estado y el flujo de subida del plan nutricional en PDF.</p>
+      </div>
+      <div class="ds-grid ds-grid--2" style="margin-bottom: var(--space-5);" id="feedback-alerts"></div>
+      <div id="feedback-modal-trigger"></div>
+    </section>
+
+    <!-- ===================== Mockups ===================== -->
+    <section class="ds-section" id="mockups">
+      <div class="ds-section__head">
+        <span class="ds-section__eyebrow">Vista previa</span>
+        <h2 class="ds-section__title">Pantallas reales</h2>
+        <p class="ds-section__desc">Los componentes anteriores ensamblados en dos pantallas de la app, para juzgar la estética en contexto.</p>
+      </div>
+      <div class="phone-mockups" id="phone-mockups"></div>
+    </section>
+
+  </main>
+
+  <script>
+(() => {
+  // ../sessions/zealous-inspiring-volta/mnt/Pholio/Dev Proyects/KatöFit/design-system/js/html.js
+  var tag = (type, attributes = {}, parent = null, children = null) => {
+    const e = document.createElement(type);
+    for (const k in attributes) {
+      const v = attributes[k];
+      if (k === "className") {
+        e.className = Array.isArray(v) ? v.join(" ") : v;
+      } else if (k === "style" && v !== null && typeof v === "object") {
+        Object.assign(e.style, v);
+      } else if (k.startsWith("on") && typeof v === "function") {
+        e.addEventListener(k.substring(2).toLowerCase(), v);
+      } else if (k === "htmlFor") {
+        e.setAttribute("for", v);
+      } else if (k.startsWith("data-") || k.startsWith("aria-")) {
+        e.setAttribute(k, v);
+      } else {
+        e[k] = v;
+      }
+    }
+    if (children !== null && children !== void 0) {
+      const nodes = Array.isArray(children) ? children : [children];
+      nodes.forEach((child) => {
+        if (child === null || child === void 0) return;
+        if (typeof child === "string" || typeof child === "number") {
+          e.appendChild(document.createTextNode(String(child)));
+        } else if (child instanceof Node) {
+          e.appendChild(child);
+        }
+      });
+    }
+    if (parent) parent.appendChild(e);
+    return e;
+  };
+  var div = (attrs = {}, parent = null, children = null) => tag("div", attrs, parent, children);
+  var p = (attrs = {}, parent = null, children = null) => tag("p", attrs, parent, children);
+  var span = (attrs = {}, parent = null, children = null) => tag("span", attrs, parent, children);
+  var strong = (attrs = {}, parent = null, children = null) => tag("strong", attrs, parent, children);
+  var label = (attrs = {}, parent = null, children = null) => tag("label", attrs, parent, children);
+  var input = (attrs = {}, parent = null, children = null) => tag("input", attrs, parent, children);
+  var button = (attrs = {}, parent = null, children = null) => tag("button", attrs, parent, children);
+  var select = (attrs = {}, parent = null, children = null) => tag("select", attrs, parent, children);
+  var option = (attrs = {}, parent = null, children = null) => tag("option", attrs, parent, children);
+
+  // ../sessions/zealous-inspiring-volta/mnt/Pholio/Dev Proyects/KatöFit/design-system/js/data.js
+  var ACCENTS = [
+    { id: "lima", label: "Lima el\xE9ctrico" },
+    { id: "coral", label: "Coral v\xEDvido" },
+    { id: "azul", label: "Azul el\xE9ctrico" },
+    { id: "violeta", label: "Violeta" }
+  ];
+  var MOCK_PRODUCT = {
+    name: "Pechuga de pollo 1kg",
+    sub: "Categor\xEDa: Prote\xEDna \xB7 Marca gen\xE9rica",
+    icon: "\u{1F357}",
+    stores: [
+      { name: "Automercado", price: "\u20A13,450", dot: "var(--info-500)", best: false },
+      { name: "MaxiPali", price: "\u20A12,890", dot: "var(--success-500)", best: true },
+      { name: "Walmart", price: "\u20A13,120", dot: "var(--warning-500)", best: false }
+    ]
+  };
+  var MOCK_MACROS = [
+    { label: "Prote\xEDna", value: "120g / 150g", pct: 80, color: "var(--accent-500)" },
+    { label: "Carbohidratos", value: "180g / 220g", pct: 62, color: "var(--info-500)" },
+    { label: "Grasas", value: "45g / 65g", pct: 40, color: "var(--warning-500)" }
+  ];
+  var MOCK_NAV_ITEMS = [
+    { icon: "\u{1F3E0}", label: "Inicio", active: true },
+    { icon: "\u{1F50D}", label: "Comparar", active: false },
+    { icon: "\u{1F4CB}", label: "Plan", active: false },
+    { icon: "\u{1F464}", label: "Perfil", active: false }
+  ];
+
+  // ../sessions/zealous-inspiring-volta/mnt/Pholio/Dev Proyects/KatöFit/design-system/js/theme.js
+  var STORAGE_KEY = "kato-ds-theme";
+  var root = document.documentElement;
+  function getSavedTheme() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    } catch {
+      return {};
+    }
+  }
+  function save(state) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+    }
+  }
+  function prefersDark() {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function initTheme() {
+    const saved = getSavedTheme();
+    const theme = saved.theme || (prefersDark() ? "dark" : "light");
+    const accent = saved.accent || "lima";
+    root.setAttribute("data-theme", theme);
+    root.setAttribute("data-accent", accent);
+    return { theme, accent };
+  }
+  function setTheme(theme) {
+    root.setAttribute("data-theme", theme);
+    save({ ...getSavedTheme(), theme });
+  }
+  function setAccent(accent) {
+    root.setAttribute("data-accent", accent);
+    save({ ...getSavedTheme(), accent });
+  }
+  function ThemeToggle({ parent = null }) {
+    const btn = button({ className: "ds-theme-toggle", type: "button" }, parent);
+    const render = () => {
+      const isDark = root.getAttribute("data-theme") === "dark";
+      btn.innerHTML = "";
+      span({}, btn, isDark ? "\u2600\uFE0F" : "\u{1F319}");
+      span({}, btn, isDark ? "Claro" : "Oscuro");
+    };
+    btn.addEventListener("click", () => {
+      const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      setTheme(next);
+      render();
+    });
+    render();
+    return btn;
+  }
+  function AccentPicker({ parent = null }) {
+    const wrap = span({ className: "ds-accent-picker", role: "group", "aria-label": "Elegir color de acento" }, parent);
+    const render = () => {
+      wrap.innerHTML = "";
+      const current = root.getAttribute("data-accent");
+      ACCENTS.forEach((accent) => {
+        const swatch = button(
+          {
+            className: "ds-accent-swatch",
+            type: "button",
+            "aria-label": accent.label,
+            "aria-pressed": String(accent.id === current),
+            style: { background: `var(--accent-500)` },
+            onClick: () => {
+              setAccent(accent.id);
+              render();
+            }
+          },
+          wrap
+        );
+        swatch.style.background = accentPreviewColor(accent.id);
+      });
+    };
+    render();
+    return wrap;
+  }
+  function accentPreviewColor(id) {
+    const map = {
+      lima: "#c4f82a",
+      coral: "#ff5a5f",
+      azul: "#3d5aff",
+      violeta: "#8b5cf6"
+    };
+    return map[id] || "#c4f82a";
+  }
+
+  // ../sessions/zealous-inspiring-volta/mnt/Pholio/Dev Proyects/KatöFit/design-system/js/components.js
+  function Button({ label: text, variant = "primary", size = "md", disabled = false, onClick = null, parent = null }) {
+    return button(
+      {
+        className: ["btn", `btn--${variant}`, `btn--${size}`],
+        disabled,
+        onClick: disabled ? null : onClick,
+        type: "button"
+      },
+      parent,
+      text
+    );
+  }
+  function IconButton({ icon, ariaLabel, onClick = null, parent = null }) {
+    return button(
+      {
+        className: ["btn", "btn--icon"],
+        "aria-label": ariaLabel,
+        onClick,
+        type: "button"
+      },
+      parent,
+      icon
+    );
+  }
+  function Field({ labelText, control, parent = null }) {
+    const wrap = div({ className: "field" }, parent);
+    if (labelText) label({ className: "field__label" }, wrap, labelText);
+    wrap.appendChild(control);
+    return wrap;
+  }
+  function TextInput({ placeholder = "", icon = null, type = "text", parent = null }) {
+    if (icon) {
+      const group = div({ className: "input-group" }, parent);
+      span({ className: "input-group__icon" }, group, icon);
+      input({ className: "input", type, placeholder }, group);
+      return group;
+    }
+    return input({ className: "input", type, placeholder }, parent);
+  }
+  function Select({ options = [], parent = null }) {
+    const sel = select({ className: "select" }, parent);
+    options.forEach((opt) => option({ value: opt.value ?? opt }, sel, opt.label ?? opt));
+    return sel;
+  }
+  function CheckRow({ text, type = "checkbox", name = null, checked = false, parent = null }) {
+    const row = label({ className: "check-row" }, parent);
+    input({ type, name, checked }, row);
+    span({}, row, text);
+    return row;
+  }
+  function Switch({ checked = false, onChange = null, parent = null }) {
+    const wrap = label({ className: "switch" }, parent);
+    input({ type: "checkbox", checked, onChange }, wrap);
+    span({ className: "switch__track" }, wrap);
+    return wrap;
+  }
+  function Badge({ text, variant = "neutral", parent = null }) {
+    return span({ className: ["badge", `badge--${variant}`] }, parent, text);
+  }
+  function Alert({ variant = "info", title, text, parent = null }) {
+    const box = div({ className: ["alert", `alert--${variant}`] }, parent);
+    const content = div({}, box);
+    strong({}, content, title);
+    p({ style: { margin: "2px 0 0", color: "inherit", opacity: 0.85 } }, content, text);
+    return box;
+  }
+  function ProductCard({ name, sub, icon, stores, parent = null }) {
+    const card = div({ className: "card product-card" }, parent);
+    const top = div({ className: "product-card__top" }, card);
+    div({ className: "product-card__thumb" }, top, icon);
+    const meta = div({}, top);
+    div({ className: "product-card__title" }, meta, name);
+    span({ className: "product-card__sub" }, meta, sub);
+    const storeList = div({ className: "product-card__stores" }, card);
+    const cheapest = Math.min(...stores.map((s) => s.best ? 0 : 1));
+    stores.forEach((store) => {
+      const row = div({ className: ["store-row", store.best ? "store-row--best" : ""] }, storeList);
+      const nameEl = span({ className: "store-row__name" }, row);
+      span({ className: "store-row__dot", style: { background: store.dot } }, nameEl);
+      nameEl.appendChild(document.createTextNode(store.name));
+      span({ className: "store-row__price" }, row, store.price);
+    });
+    return card;
+  }
+  function NutritionCard({ title = "Macros de hoy", macros, parent = null }) {
+    const card = div({ className: "card" }, parent);
+    const head = div({ className: "nutrition-card__title" }, card);
+    strong({}, head, title);
+    span({ className: "badge badge--accent" }, head, "1,840 kcal");
+    macros.forEach((m) => {
+      const row = div({ className: "macro-row" }, card);
+      span({ className: "macro-row__label" }, row, m.label);
+      const bar = div({ className: "macro-bar" }, row);
+      div({ className: "macro-bar__fill", style: { width: `${m.pct}%`, background: m.color } }, bar);
+      span({ className: "macro-row__value" }, row, m.value);
+    });
+    return card;
+  }
+  function BottomNav({ items, parent = null }) {
+    const nav = div({ className: "bottom-nav" }, parent);
+    items.forEach((item) => {
+      const btn = button(
+        { className: ["bottom-nav__item", item.active ? "bottom-nav__item--active" : ""], type: "button" },
+        nav
+      );
+      span({}, btn, item.icon);
+      span({}, btn, item.label);
+    });
+    return nav;
+  }
+  function Modal({ title, bodyBuilder, parent = null }) {
+    const backdrop = div({ className: "modal-backdrop" }, parent);
+    const modal2 = div({ className: "modal" }, backdrop);
+    const head = div({ className: "modal__head" }, modal2);
+    strong({ style: { fontSize: "var(--fs-h4)" } }, head, title);
+    IconButton({ icon: "\u2715", ariaLabel: "Cerrar", onClick: () => backdrop.classList.remove("is-open"), parent: head });
+    if (bodyBuilder) bodyBuilder(modal2);
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) backdrop.classList.remove("is-open");
+    });
+    return backdrop;
+  }
+
+  // ../sessions/zealous-inspiring-volta/mnt/Pholio/Dev Proyects/KatöFit/design-system/js/main.js
+  initTheme();
+  var $ = (id) => document.getElementById(id);
+  AccentPicker({ parent: $("topbar-accent") });
+  ThemeToggle({ parent: $("topbar-theme") });
+  function Swatch(container, varRef, name, fillStyle) {
+    const box = div({ className: "ds-swatch" }, container);
+    div({ className: "ds-swatch__fill", style: { background: fillStyle || `var(${varRef})` } }, box);
+    const labelRow = div({ className: "ds-swatch__label" }, box);
+    span({}, labelRow, name);
+    span({}, labelRow, varRef);
+  }
+  var neutrals = [
+    ["950", "--gray-950"],
+    ["900", "--gray-900"],
+    ["800", "--gray-800"],
+    ["700", "--gray-700"],
+    ["600", "--gray-600"],
+    ["500", "--gray-500"],
+    ["400", "--gray-400"],
+    ["300", "--gray-300"],
+    ["200", "--gray-200"],
+    ["100", "--gray-100"],
+    ["50", "--gray-50"]
+  ];
+  neutrals.forEach(([name, ref]) => Swatch($("color-neutrals"), ref, `gray-${name}`));
+  var accentSteps = [
+    ["100", "--accent-100"],
+    ["400", "--accent-400"],
+    ["500", "--accent-500"],
+    ["600", "--accent-600"],
+    ["700", "--accent-700"]
+  ];
+  accentSteps.forEach(([name, ref]) => Swatch($("color-accent"), ref, `accent-${name}`));
+  var semantic = [
+    ["success", "--success-500"],
+    ["warning", "--warning-500"],
+    ["error", "--error-500"],
+    ["info", "--info-500"]
+  ];
+  semantic.forEach(([name, ref]) => Swatch($("color-semantic"), ref, name));
+  var typeSpecimens = [
+    { tag: "div", sample: "Kat\xF6", size: "var(--fs-display)", weight: 700, meta: "Display / 48.8px / Space Grotesk 700" },
+    { tag: "div", sample: "Comparador de precios", size: "var(--fs-h1)", weight: 700, meta: "H1 / 39px / 700" },
+    { tag: "div", sample: "Plan nutricional semanal", size: "var(--fs-h2)", weight: 700, meta: "H2 / 31px / 700" },
+    { tag: "div", sample: "Productos m\xE1s econ\xF3micos", size: "var(--fs-h3)", weight: 700, meta: "H3 / 25px / 700" },
+    { tag: "div", sample: "Resumen de tu semana", size: "var(--fs-h4)", weight: 700, meta: "H4 / 20px / 700" },
+    { tag: "div", sample: "Encontramos 3 opciones m\xE1s baratas cerca de ti.", size: "var(--fs-body-lg)", weight: 400, meta: "Body LG / 18px / 400" },
+    { tag: "div", sample: "Ingresa tu plan nutricional en PDF para comenzar.", size: "var(--fs-body)", weight: 400, meta: "Body / 16px / 400" },
+    { tag: "div", sample: "Actualizado hace 5 minutos", size: "var(--fs-caption)", weight: 500, meta: "Caption / 14px / 500" }
+  ];
+  typeSpecimens.forEach((s) => {
+    const row = div({ className: "ds-type-row" }, $("type-scale"));
+    div({ style: { fontSize: s.size, fontWeight: s.weight, letterSpacing: "-0.01em" } }, row, s.sample);
+    span({ className: "ds-type-row__meta" }, row, s.meta);
+  });
+  var monoRow = div({ className: "ds-type-row" }, $("type-scale"));
+  div({ className: "ds-mono-figure", style: { fontSize: "var(--fs-h2)", fontWeight: 700 } }, monoRow, "\u20A12,890");
+  span({ className: "ds-type-row__meta" }, monoRow, "Precio / Space Mono 700 \u2014 usado para todo dato num\xE9rico");
+  var spacingSteps = [4, 8, 12, 16, 20, 24, 32, 40, 48, 64];
+  spacingSteps.forEach((px) => {
+    const row = div({ className: "ds-scale-row" }, $("spacing-scale"));
+    span({ className: "ds-scale-row__label" }, row, `${px}px`);
+    div({ className: "ds-scale-row__bar", style: { width: `${px * 3}px` } }, row);
+  });
+  var radiusSteps = [
+    ["sm \xB7 8px", "var(--radius-sm)"],
+    ["md \xB7 12px", "var(--radius-md)"],
+    ["lg \xB7 16px", "var(--radius-lg)"],
+    ["xl \xB7 24px", "var(--radius-xl)"],
+    ["full", "var(--radius-full)"]
+  ];
+  radiusSteps.forEach(([name, val]) => {
+    const box = div({ className: "ds-radius-box", style: { borderRadius: val } }, $("radius-scale"));
+    box.textContent = name;
+  });
+  [["sm", "var(--shadow-sm)"], ["md", "var(--shadow-md)"], ["lg", "var(--shadow-lg)"], ["glow", "var(--shadow-glow)"]].forEach(([name, val]) => {
+    const card = div({ className: "ds-shadow-card", style: { boxShadow: val } }, $("shadow-scale"));
+    card.textContent = `shadow-${name}`;
+  });
+  ["primary", "secondary", "ghost", "danger"].forEach((variant) => {
+    Button({ label: variant === "primary" ? "Comparar precios" : variant === "secondary" ? "Ver detalles" : variant === "ghost" ? "Cancelar" : "Eliminar", variant, size: "md", parent: $("buttons-variants") });
+  });
+  ["sm", "md", "lg"].forEach((size) => Button({ label: `Bot\xF3n ${size}`, variant: "primary", size, parent: $("buttons-sizes") }));
+  Button({ label: "Bot\xF3n activo", variant: "primary", parent: $("buttons-states") });
+  Button({ label: "Bot\xF3n deshabilitado", variant: "primary", disabled: true, parent: $("buttons-states") });
+  IconButton({ icon: "\u2699\uFE0F", ariaLabel: "Configuraci\xF3n", parent: $("buttons-states") });
+  IconButton({ icon: "\u{1F514}", ariaLabel: "Notificaciones", parent: $("buttons-states") });
+  var formsGrid = $("forms-showcase");
+  Field({ labelText: "Buscar producto", control: TextInput({ placeholder: "Ej. arroz, pollo, leche\u2026", icon: "\u{1F50D}" }), parent: formsGrid });
+  Field({ labelText: "Supermercado", control: Select({ options: ["Todos", "Automercado", "MaxiPali", "Walmart", "Pricesmart"] }), parent: formsGrid });
+  var prefWrap = div({ className: "field" }, formsGrid);
+  span({ className: "field__label" }, prefWrap, "Preferencia de compra");
+  CheckRow({ text: "Priorizar precio m\xE1s bajo", type: "radio", name: "pref", checked: true, parent: prefWrap });
+  CheckRow({ text: "Priorizar calidad nutricional", type: "radio", name: "pref", parent: prefWrap });
+  CheckRow({ text: "Balance entre precio y calidad", type: "radio", name: "pref", parent: prefWrap });
+  var switchWrap = div({ className: "field" }, formsGrid);
+  span({ className: "field__label" }, switchWrap, "Notificarme cuando baje el precio");
+  var switchRow = div({ style: { display: "flex", alignItems: "center", gap: "var(--space-3)" } }, switchWrap);
+  Switch({ checked: true, parent: switchRow });
+  span({ style: { fontSize: "var(--fs-caption)", color: "var(--text-muted)" } }, switchRow, "Activado");
+  var badgeData = [
+    ["M\xE1s barato", "success"],
+    ["Mejor calidad", "accent"],
+    ["Alto en prote\xEDna", "accent"],
+    ["Bajo en sodio", "success"],
+    ["Precio subi\xF3", "warning"],
+    ["Sin stock", "error"],
+    ["Gen\xE9rico", "neutral"]
+  ];
+  badgeData.forEach(([text, variant]) => Badge({ text, variant, parent: $("badges-showcase") }));
+  ProductCard({ ...MOCK_PRODUCT, parent: $("cards-showcase") });
+  NutritionCard({ macros: MOCK_MACROS, parent: $("cards-showcase") });
+  BottomNav({ items: MOCK_NAV_ITEMS, parent: $("nav-showcase") });
+  Alert({ variant: "success", title: "Encontramos un precio mejor", text: "Arroz 1kg baj\xF3 a \u20A1890 en Walmart.", parent: $("feedback-alerts") });
+  Alert({ variant: "warning", title: "Producto agotado", text: "Leche deslactosada no disponible en Automercado.", parent: $("feedback-alerts") });
+  Alert({ variant: "error", title: "No pudimos leer tu PDF", text: "Intenta subir el plan nutricional en otro formato.", parent: $("feedback-alerts") });
+  Alert({ variant: "info", title: "Actualizaci\xF3n de precios", text: "Los precios se sincronizan cada 24 horas.", parent: $("feedback-alerts") });
+  var modal = Modal({
+    title: "Subir plan nutricional",
+    bodyBuilder: (body) => {
+      const drop = div({ className: "dropzone" }, body);
+      drop.textContent = "\u{1F4C4} Arrastra tu PDF aqu\xED o haz clic para seleccionar";
+      const actions = div({ className: "modal__actions" }, body);
+      Button({ label: "Cancelar", variant: "ghost", onClick: () => modal.classList.remove("is-open"), parent: actions });
+      Button({ label: "Analizar plan", variant: "primary", parent: actions });
+    },
+    parent: document.body
+  });
+  Button({ label: "Subir plan nutricional", variant: "primary", onClick: () => modal.classList.add("is-open"), parent: $("feedback-modal-trigger") });
+  function buildDashboardScreen(screen) {
+    const head = div({ className: "phone-frame__header" }, screen);
+    strong({}, head, "Hola, Sa\xFAl \u{1F44B}");
+    IconButton({ icon: "\u{1F514}", ariaLabel: "Notificaciones", parent: head });
+    NutritionCard({ title: "Hoy", macros: MOCK_MACROS, parent: screen });
+    ProductCard({ ...MOCK_PRODUCT, parent: screen });
+  }
+  function buildCompareScreen(screen) {
+    const head = div({ className: "phone-frame__header" }, screen);
+    strong({}, head, "Comparar precios");
+    IconButton({ icon: "\u2699\uFE0F", ariaLabel: "Filtros", parent: head });
+    Field({ labelText: "", control: TextInput({ placeholder: "Buscar producto\u2026", icon: "\u{1F50D}" }), parent: screen });
+    const badgesRow = div({ style: { display: "flex", gap: "var(--space-2)", flexWrap: "wrap" } }, screen);
+    Badge({ text: "M\xE1s barato", variant: "success", parent: badgesRow });
+    Badge({ text: "Mejor calidad", variant: "accent", parent: badgesRow });
+    ProductCard({ ...MOCK_PRODUCT, parent: screen });
+    const p2 = { ...MOCK_PRODUCT, name: "Arroz 1kg", icon: "\u{1F35A}", sub: "Categor\xEDa: Grano \xB7 Marca gen\xE9rica", stores: [
+      { name: "Automercado", price: "\u20A11,050", dot: "var(--info-500)", best: false },
+      { name: "MaxiPali", price: "\u20A1980", dot: "var(--warning-500)", best: false },
+      { name: "Walmart", price: "\u20A1890", dot: "var(--success-500)", best: true }
+    ] };
+    ProductCard({ ...p2, parent: screen });
+  }
+  function PhoneMockup({ builder, caption, parent }) {
+    const wrap = div({}, parent);
+    const frame = div({ className: "phone-frame" }, wrap);
+    div({ className: "phone-frame__notch" }, frame);
+    const screen = div({ className: "phone-frame__screen" }, frame);
+    builder(screen);
+    BottomNav({ items: MOCK_NAV_ITEMS, parent: frame });
+    p({ className: "phone-mockups__caption" }, wrap, caption);
+  }
+  PhoneMockup({ builder: buildDashboardScreen, caption: "Dashboard nutricional", parent: $("phone-mockups") });
+  PhoneMockup({ builder: buildCompareScreen, caption: "Comparador de precios", parent: $("phone-mockups") });
+})();
+
+  </script>
+</body>
+</html>

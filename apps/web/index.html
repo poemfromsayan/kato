@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light" data-accent="lima">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Katö</title>
+  <meta name="description" content="Katö — nutrición y economía doméstica: compara precios y datos nutricionales entre supermercados de Costa Rica." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- CSP: connect-src incluye la URL de la API (ver js/config.js) porque el
+       navegador aplica CSP también a las llamadas fetch(), no solo a scripts.
+       style-src necesita 'unsafe-inline' por lo mismo que en el sistema de
+       diseño: html.js aplica estilos dinámicos vía JS. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; connect-src 'self' http://localhost:3001; base-uri 'self'; form-action 'self'; object-src 'none';" />
+  <meta name="referrer" content="no-referrer" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
