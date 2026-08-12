@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import psycopg
+from psycopg import errors
 
 
 @dataclass(frozen=True)
@@ -93,19 +94,46 @@ def upsert_store_product(
     store_sku: str,
     product_url: str,
 ) -> str:
-    """Crea o actualiza la fila puente store_products y devuelve su id."""
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            INSERT INTO store_products (store_id, product_id, store_sku, product_url, last_scraped_at)
-            VALUES (%s, %s, %s, %s, now())
-            ON CONFLICT (store_id, store_sku)
-            DO UPDATE SET product_url = EXCLUDED.product_url, last_scraped_at = now()
-            RETURNING id
-            """,
-            (store_id, product_id, store_sku, product_url),
-        )
-        return cur.fetchone()[0]
+    """Crea o actualiza la fila puente store_products y devuelve su id.
+
+    `store_products` tiene DOS unique constraints, no una: (store_id,
+    store_sku) — el caso normal, "ya vimos este SKU, actualizale la URL" —
+    y (store_id, product_id), que existe para que una tienda no tenga dos
+    filas apuntando al mismo producto genérico. La segunda puede chocar
+    incluso cuando la primera no: pasa cuando find_or_create_product()
+    (fuzzy-matching por nombre, ver su docstring) le asigna a DOS SKUs
+    distintos el mismo producto genérico — ya sea correctamente (dos
+    presentaciones que de verdad son "lo mismo") o por un falso positivo
+    del heurístico. `ON CONFLICT` solo cubre UN constraint por INSERT, así
+    que atrapamos el choque de la segunda a mano y actualizamos la fila
+    existente en vez de duplicarla.
+    """
+    try:
+        with conn.transaction():  # savepoint: si falla, no arrastra la transacción del caller
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO store_products (store_id, product_id, store_sku, product_url, last_scraped_at)
+                    VALUES (%s, %s, %s, %s, now())
+                    ON CONFLICT (store_id, store_sku)
+                    DO UPDATE SET product_url = EXCLUDED.product_url, last_scraped_at = now()
+                    RETURNING id
+                    """,
+                    (store_id, product_id, store_sku, product_url),
+                )
+                return cur.fetchone()[0]
+    except errors.UniqueViolation:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE store_products
+                SET store_sku = %s, product_url = %s, last_scraped_at = now()
+                WHERE store_id = %s AND product_id = %s
+                RETURNING id
+                """,
+                (store_sku, product_url, store_id, product_id),
+            )
+            return cur.fetchone()[0]
 
 
 def insert_price_snapshot(
