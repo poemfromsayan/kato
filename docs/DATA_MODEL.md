@@ -24,7 +24,9 @@ Postgres relacional. Estas son las tablas centrales y por qué existen.
 
 **`plan_items`** — la salida *estructurada* que Claude extrae del PDF: nombre del alimento tal como aparece en el plan, cantidad, unidad, frecuencia, y un rango de precio orientativo. Ese rango de precio es una estimación del modelo, **no autoritativa** — se guarda aparte de cualquier precio real para que nunca se confunda con datos de `price_snapshots`. `matched_product_id` se llena después, con lógica determinística de nuestro propio código (búsqueda/similaridad de texto contra `products`), no con otra llamada al modelo.
 
-**`shopping_lists`** / **`shopping_list_items`** — el resultado final: cada ítem del plan resuelto a un producto y tienda concretos, con el precio real (`price_snapshots`) vigente al momento de generar la lista, según la preferencia (precio / calidad / balance) que el usuario haya elegido.
+**`shopping_lists`** / **`shopping_list_items`** — el resultado final: cada ítem del plan resuelto a un producto y tienda concretos, con el precio real (`price_snapshots`) vigente al momento de generar la lista. Implementado en `apps/api/src/modules/shopping-lists/`.
+
+> **Limitación conocida:** `preference_used` guarda la preferencia del usuario (`price` / `quality` / `balance`), pero HOY la resolución de "mejor tienda" siempre usa precio más bajo — no existe todavía ninguna señal real de calidad por tienda en el schema (reputación, frescura, etc.), así que `quality`/`balance` no tienen lógica propia por ahora. Ídem para el comparador (`modules/prices`): resalta la tienda más barata sin importar la preferencia guardada. Corregir esto requiere primero decidir qué dato real va a representar "calidad".
 
 ## Por qué la IA no toca `price_snapshots`
 
