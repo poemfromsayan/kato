@@ -42,78 +42,181 @@ const CATEGORIES = [
 // nutrition: por 100g/100ml salvo que se indique otra serving_size
 const PRODUCTS = [
   {
+    // Fuente real: INCAP, entrada "ARROZ BLANCO, PULIDO, ENRIQUECIDO" (código
+    // 13002) — arroz crudo tal como se vende en el paquete de 1kg.
     name: 'Arroz blanco', brand: 'Tío Pelón', category: 'granos-cereales', unit: 'kg', unit_size: 1,
-    nutrition: { serving_size: '100g', calories: 130, protein_g: 2.4, carbs_g: 28, fat_g: 0.3, fiber_g: 0.4, sugar_g: 0, sodium_mg: 1 },
+    nutrition: {
+      serving_size: '100g', calories: 360, protein_g: 6.61, carbs_g: 79.34, fat_g: 0.58,
+      fiber_g: 1.40, sugar_g: 0, sodium_mg: 1, source: 'manual',
+      source_url: 'https://archive.org/details/TablaDeComposicionDeAlimentosParaCentroamericaDelINCAP',
+    },
     prices: { automercado: 1250, maxipali: 1080, 'walmart-cr': 1120, 'mas-x-menos': 1150, 'pricesmart-cr': null },
   },
   {
+    // Corrección importante: el valor anterior (341kcal) era el de frijol
+    // negro CRUDO/SECO, no el de un producto ENLATADO — un error de ~4x que
+    // hacía ver el producto como mucho más calórico de lo real. INCAP no
+    // tiene una entrada de "frijol negro, cocido/enlatado, simple" (solo
+    // crudo, o cocido con cerdo y tomate), así que se usa un producto
+    // enlatado real de referencia (marca S&W, dato de usuario verificado por
+    // UPC en MyFoodData) — no es Del Monte específicamente, pero es
+    // representativo de un frijol negro enlatado comercial simple.
     name: 'Frijoles negros', brand: 'Del Monte', category: 'granos-cereales', unit: 'g', unit_size: 900,
-    nutrition: { serving_size: '100g', calories: 341, protein_g: 21.6, carbs_g: 62.4, fat_g: 1.4, fiber_g: 15.5, sugar_g: 2.1, sodium_mg: 2 },
+    nutrition: {
+      serving_size: '100g', calories: 85, protein_g: 5.4, carbs_g: 16.2, fat_g: 0,
+      fiber_g: 7.7, sugar_g: 0.8, sodium_mg: 65, source: 'manual',
+      source_url: 'https://tools.myfooddata.com/nutrition-facts/100126657/wt1',
+    },
     prices: { automercado: 1450, maxipali: 1290, 'walmart-cr': 1310, 'mas-x-menos': null, 'pricesmart-cr': null },
   },
   {
+    // Fuente real: INCAP, "Tabla de Composición de Alimentos para Centroamérica",
+    // 2da ed., entrada "LECHE DE VACA, INTEGRA, FLUIDA (3.25% GRASA)". sugar_g se
+    // aproxima a carbs_g porque en leche fluida el carbohidrato es casi
+    // exclusivamente lactosa (INCAP no reporta azúcares por separado).
     name: 'Leche entera', brand: 'Dos Pinos', category: 'lacteos', unit: 'l', unit_size: 1,
-    nutrition: { serving_size: '100ml', calories: 61, protein_g: 3.2, carbs_g: 4.8, fat_g: 3.3, fiber_g: 0, sugar_g: 4.8, sodium_mg: 40 },
+    nutrition: {
+      serving_size: '100ml', calories: 60, protein_g: 3.22, carbs_g: 4.52, fat_g: 3.25,
+      fiber_g: 0, sugar_g: 4.52, sodium_mg: 40, source: 'manual',
+      source_url: 'https://archive.org/details/TablaDeComposicionDeAlimentosParaCentroamericaDelINCAP',
+    },
     prices: { automercado: 995, maxipali: 890, 'walmart-cr': 910, 'mas-x-menos': 930, 'pricesmart-cr': 850 },
   },
   {
+    // Fuente real: USDA FoodData Central, fdcId 2646170 "Chicken, breast,
+    // boneless, skinless, raw". Se usa el valor crudo (no cocido) porque el
+    // producto de supermercado se vende crudo — el valor "165 kcal / 31g
+    // proteína" que circula mucho en internet corresponde a pollo YA COCIDO,
+    // no es comparable aquí.
     name: 'Pechuga de pollo', brand: 'Pipasa', category: 'carnes-pescados', unit: 'kg', unit_size: 1,
-    nutrition: { serving_size: '100g', calories: 165, protein_g: 31, carbs_g: 0, fat_g: 3.6, fiber_g: 0, sugar_g: 0, sodium_mg: 74 },
+    nutrition: {
+      serving_size: '100g', calories: 106, protein_g: 22.5, carbs_g: 0, fat_g: 1.93,
+      fiber_g: 0, sugar_g: 0, sodium_mg: 65.8, source: 'manual',
+      source_url: 'https://fdc.nal.usda.gov/food-details/2646170/nutrients',
+    },
     prices: { automercado: 3200, maxipali: 2890, 'walmart-cr': 2950, 'mas-x-menos': 3050, 'pricesmart-cr': 2750 },
   },
   {
+    // Fuente real: INCAP, entrada "HUEVO DE GALLINA, ENTERO, CRUDO" (código
+    // 2002) — huevo crudo, no cocido.
     name: 'Huevos (docena)', brand: 'Yema Dorada', category: 'lacteos', unit: 'unidad', unit_size: 12,
-    nutrition: { serving_size: '100g', calories: 143, protein_g: 12.6, carbs_g: 0.7, fat_g: 9.5, fiber_g: 0, sugar_g: 0.4, sodium_mg: 142 },
+    nutrition: {
+      serving_size: '100g', calories: 147, protein_g: 12.58, carbs_g: 0.77, fat_g: 9.94,
+      fiber_g: 0, sugar_g: 0, sodium_mg: 140, source: 'manual',
+      source_url: 'https://archive.org/details/TablaDeComposicionDeAlimentosParaCentroamericaDelINCAP',
+    },
     prices: { automercado: 1890, maxipali: 1650, 'walmart-cr': 1720, 'mas-x-menos': 1780, 'pricesmart-cr': null },
   },
   {
+    // Fuente real: INCAP, entrada "PAN BLANCO, DE RODAJA O CUADRADO, SUAVE"
+    // (código 14021) — pan de molde tipo sándwich, no tostado.
     name: 'Pan blanco', brand: 'Bimbo', category: 'panaderia', unit: 'g', unit_size: 600,
-    nutrition: { serving_size: '100g', calories: 265, protein_g: 9, carbs_g: 49, fat_g: 3.2, fiber_g: 2.7, sugar_g: 5, sodium_mg: 490 },
+    nutrition: {
+      serving_size: '100g', calories: 266, protein_g: 7.64, carbs_g: 50.61, fat_g: 3.29,
+      fiber_g: 2.40, sugar_g: 5, sodium_mg: 681, source: 'manual',
+      source_url: 'https://archive.org/details/TablaDeComposicionDeAlimentosParaCentroamericaDelINCAP',
+    },
     prices: { automercado: 1590, maxipali: 1420, 'walmart-cr': 1450, 'mas-x-menos': null, 'pricesmart-cr': null },
   },
   {
+    // Fuente real: INCAP, entrada "ACEITE VEGETAL, DE SOYA" (código 16009) —
+    // aceite de soya es el tipo más común de "aceite vegetal" genérico
+    // vendido en Costa Rica (marca Cocinero incluida).
     name: 'Aceite vegetal', brand: 'Cocinero', category: 'despensa', unit: 'ml', unit_size: 900,
-    nutrition: { serving_size: '100ml', calories: 884, protein_g: 0, carbs_g: 0, fat_g: 100, fiber_g: 0, sugar_g: 0, sodium_mg: 0 },
+    nutrition: {
+      serving_size: '100ml', calories: 884, protein_g: 0, carbs_g: 0, fat_g: 100,
+      fiber_g: 0, sugar_g: 0, sodium_mg: 0, source: 'manual',
+      source_url: 'https://archive.org/details/TablaDeComposicionDeAlimentosParaCentroamericaDelINCAP',
+    },
     prices: { automercado: 1990, maxipali: 1750, 'walmart-cr': 1810, 'mas-x-menos': 1850, 'pricesmart-cr': 1690 },
   },
   {
+    // Fuente real: USDA FoodData Central, fdcId 169655 "Sugars, granulated"
+    // — confirma que el valor que ya teníamos estimado era correcto.
     name: 'Azúcar blanca', brand: 'CATSA', category: 'despensa', unit: 'kg', unit_size: 1,
-    nutrition: { serving_size: '100g', calories: 387, protein_g: 0, carbs_g: 100, fat_g: 0, fiber_g: 0, sugar_g: 100, sodium_mg: 0 },
+    nutrition: {
+      serving_size: '100g', calories: 387, protein_g: 0, carbs_g: 100, fat_g: 0,
+      fiber_g: 0, sugar_g: 100, sodium_mg: 1, source: 'manual',
+      source_url: 'https://fdc.nal.usda.gov/food-details/169655/nutrients',
+    },
     prices: { automercado: 750, maxipali: 640, 'walmart-cr': 670, 'mas-x-menos': 690, 'pricesmart-cr': null },
   },
   {
+    // Fuente real: INCAP, entrada "TOMATE ROJO" (código 11157).
     name: 'Tomate', brand: null, category: 'frutas-verduras', unit: 'kg', unit_size: 1,
-    nutrition: { serving_size: '100g', calories: 18, protein_g: 0.9, carbs_g: 3.9, fat_g: 0.2, fiber_g: 1.2, sugar_g: 2.6, sodium_mg: 5 },
+    nutrition: {
+      serving_size: '100g', calories: 21, protein_g: 0.80, carbs_g: 4.60, fat_g: 0.30,
+      fiber_g: 1.20, sugar_g: 2.6, sodium_mg: 5, source: 'manual',
+      source_url: 'https://archive.org/details/TablaDeComposicionDeAlimentosParaCentroamericaDelINCAP',
+    },
     prices: { automercado: 990, maxipali: 780, 'walmart-cr': 820, 'mas-x-menos': 850, 'pricesmart-cr': null },
   },
   {
+    // Fuente real: INCAP, entrada "BANANO/GUINEO, MADURO" (código 12010).
     name: 'Banano', brand: null, category: 'frutas-verduras', unit: 'kg', unit_size: 1,
-    nutrition: { serving_size: '100g', calories: 89, protein_g: 1.1, carbs_g: 22.8, fat_g: 0.3, fiber_g: 2.6, sugar_g: 12.2, sodium_mg: 1 },
+    nutrition: {
+      serving_size: '100g', calories: 89, protein_g: 1.09, carbs_g: 22.84, fat_g: 0.33,
+      fiber_g: 2.60, sugar_g: 12.2, sodium_mg: 1, source: 'manual',
+      source_url: 'https://archive.org/details/TablaDeComposicionDeAlimentosParaCentroamericaDelINCAP',
+    },
     prices: { automercado: 590, maxipali: 480, 'walmart-cr': 510, 'mas-x-menos': 520, 'pricesmart-cr': null },
   },
   {
+    // Fuente real: INCAP, entrada "PESCADO CARNE, ATÚN ENLATADO C/AGUA,
+    // SÓLIDOS" (código 8020).
     name: 'Atún en agua', brand: 'Sardimar', category: 'carnes-pescados', unit: 'g', unit_size: 170,
-    nutrition: { serving_size: '100g', calories: 116, protein_g: 25.5, carbs_g: 0, fat_g: 1, fiber_g: 0, sugar_g: 0, sodium_mg: 300 },
+    nutrition: {
+      serving_size: '100g', calories: 128, protein_g: 23.62, carbs_g: 0, fat_g: 2.97,
+      fiber_g: 0, sugar_g: 0, sodium_mg: 377, source: 'manual',
+      source_url: 'https://archive.org/details/TablaDeComposicionDeAlimentosParaCentroamericaDelINCAP',
+    },
     prices: { automercado: 990, maxipali: 870, 'walmart-cr': 900, 'mas-x-menos': 920, 'pricesmart-cr': 830 },
   },
   {
+    // Fuente real: INCAP, entrada "QUESO BLANCO FRESCO, LECHE INTEGRA".
+    // El sodio real (420mg) es notablemente menor al que teníamos estimado
+    // (621mg) — corregido.
     name: 'Queso fresco', brand: 'Dos Pinos', category: 'lacteos', unit: 'g', unit_size: 250,
-    nutrition: { serving_size: '100g', calories: 264, protein_g: 18.5, carbs_g: 3.4, fat_g: 20.2, fiber_g: 0, sugar_g: 3.4, sodium_mg: 621 },
+    nutrition: {
+      serving_size: '100g', calories: 264, protein_g: 17.5, carbs_g: 3.3, fat_g: 20.1,
+      fiber_g: 0, sugar_g: 3.3, sodium_mg: 420, source: 'manual',
+      source_url: 'https://archive.org/details/TablaDeComposicionDeAlimentosParaCentroamericaDelINCAP',
+    },
     prices: { automercado: 2190, maxipali: 1950, 'walmart-cr': 2010, 'mas-x-menos': null, 'pricesmart-cr': null },
   },
   {
+    // Fuente real: INCAP, entrada "YOGURT, LECHE ÍNTEGRA, NATURAL" (código
+    // 1041) — yogur natural con leche entera, no descremado.
     name: 'Yogurt natural', brand: 'Dos Pinos', category: 'lacteos', unit: 'l', unit_size: 1,
-    nutrition: { serving_size: '100g', calories: 61, protein_g: 3.5, carbs_g: 4.7, fat_g: 3.3, fiber_g: 0, sugar_g: 4.7, sodium_mg: 46 },
+    nutrition: {
+      serving_size: '100g', calories: 61, protein_g: 3.47, carbs_g: 4.66, fat_g: 3.25,
+      fiber_g: 0, sugar_g: 4.7, sodium_mg: 46, source: 'manual',
+      source_url: 'https://archive.org/details/TablaDeComposicionDeAlimentosParaCentroamericaDelINCAP',
+    },
     prices: { automercado: 1790, maxipali: 1590, 'walmart-cr': 1650, 'mas-x-menos': 1690, 'pricesmart-cr': 1520 },
   },
   {
+    // Fuente real: INCAP, entrada "CAFÉ TOSTADO MOLIDO, PREPARADO C/AGUA
+    // S/AZÚCAR" (código 17040). Se usa el valor de café YA PREPARADO
+    // (colado/bebida), no del polvo seco — es lo que efectivamente se
+    // consume por porción, igual que ya asumía el estimado anterior.
     name: 'Café molido', brand: 'Café Rey', category: 'bebidas', unit: 'g', unit_size: 400,
-    nutrition: { serving_size: '100g', calories: 2, protein_g: 0.1, carbs_g: 0, fat_g: 0, fiber_g: 0, sugar_g: 0, sodium_mg: 2 },
+    nutrition: {
+      serving_size: '100g', calories: 1, protein_g: 0.12, carbs_g: 0, fat_g: 0.02,
+      fiber_g: 0, sugar_g: 0, sodium_mg: 2, source: 'manual',
+      source_url: 'https://archive.org/details/TablaDeComposicionDeAlimentosParaCentroamericaDelINCAP',
+    },
     prices: { automercado: 2890, maxipali: 2590, 'walmart-cr': 2650, 'mas-x-menos': 2750, 'pricesmart-cr': 2450 },
   },
   {
+    // Fuente real: INCAP, entrada "AVENA EN HOJUELAS S/FORTIFICAR (MOSH)"
+    // (código 13008) — avena en hojuelas cruda/seca, tal como se vende.
     name: 'Avena en hojuelas', brand: 'Quaker', category: 'granos-cereales', unit: 'g', unit_size: 500,
-    nutrition: { serving_size: '100g', calories: 379, protein_g: 13.2, carbs_g: 67.7, fat_g: 6.5, fiber_g: 10, sugar_g: 1, sodium_mg: 4 },
+    nutrition: {
+      serving_size: '100g', calories: 389, protein_g: 16.89, carbs_g: 66.27, fat_g: 6.90,
+      fiber_g: 10.60, sugar_g: 1, sodium_mg: 2, source: 'manual',
+      source_url: 'https://archive.org/details/TablaDeComposicionDeAlimentosParaCentroamericaDelINCAP',
+    },
     prices: { automercado: 1990, maxipali: 1750, 'walmart-cr': 1820, 'mas-x-menos': null, 'pricesmart-cr': 1690 },
   },
 ];
@@ -171,11 +274,19 @@ async function main() {
       const productId = productRows[0].id;
 
       const n = product.nutrition;
+      // Productos sin `source`/`source_url` explícitos son estimaciones a mano,
+      // no verificadas contra ninguna tabla oficial — quedan marcadas 'estimated'
+      // (ver docs/DATA_MODEL.md). Los que sí fueron sourceados (INCAP/USDA
+      // FoodData Central) traen su propio 'manual' + source_url, ver comentarios
+      // arriba en cada producto.
       await client.query(
         `INSERT INTO nutrition_facts
-           (product_id, serving_size, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, source)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'estimated')`,
-        [productId, n.serving_size, n.calories, n.protein_g, n.carbs_g, n.fat_g, n.fiber_g, n.sugar_g, n.sodium_mg]
+           (product_id, serving_size, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, source, source_url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [
+          productId, n.serving_size, n.calories, n.protein_g, n.carbs_g, n.fat_g, n.fiber_g, n.sugar_g, n.sodium_mg,
+          n.source || 'estimated', n.source_url || null,
+        ]
       );
 
       for (const [storeSlug, price] of Object.entries(product.prices)) {
