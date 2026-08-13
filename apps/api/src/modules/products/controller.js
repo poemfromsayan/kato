@@ -1,5 +1,5 @@
 import { ApiError } from '../../middleware/errorHandler.js';
-import { getProductById, searchProducts } from './repository.js';
+import { getNutritionFactsForProduct, getProductById, searchProducts } from './repository.js';
 
 export async function getProducts(req, res, next) {
   try {
@@ -15,7 +15,8 @@ export async function getProduct(req, res, next) {
   try {
     const product = await getProductById(req.params.id);
     if (!product) throw new ApiError(404, 'Producto no encontrado');
-    res.json({ product });
+    const nutritionFacts = await getNutritionFactsForProduct(req.params.id);
+    res.json({ product, nutritionFacts });
   } catch (err) {
     next(err);
   }

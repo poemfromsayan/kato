@@ -74,9 +74,12 @@ export function renderComparadorScreen(container) {
     Spinner({ parent: detailSlot });
 
     try {
-      const { prices, cheapestStoreId } = await api.get(`/prices/products/${product.id}`);
+      const [{ prices, cheapestStoreId }, { nutritionFacts }] = await Promise.all([
+        api.get(`/prices/products/${product.id}`),
+        api.get(`/products/${product.id}`),
+      ]);
       detailSlot.innerHTML = '';
-      ProductCard({ product, prices, cheapestStoreId, parent: detailSlot });
+      ProductCard({ product, prices, cheapestStoreId, nutritionFacts, parent: detailSlot });
     } catch (err) {
       detailSlot.innerHTML = '';
       const message = err instanceof ApiError ? err.message : 'No se pudieron cargar los precios';

@@ -44,3 +44,19 @@ export async function getProductById(id) {
   );
   return rows[0] ?? null;
 }
+
+/**
+ * Un producto puede tener más de una fila en nutrition_facts (distintos
+ * serving_size) — por eso esto es una consulta aparte que devuelve un
+ * array, en vez de un JOIN que multiplicaría filas de `products`.
+ */
+export async function getNutritionFactsForProduct(id) {
+  const { rows } = await query(
+    `SELECT serving_size, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, source, source_url
+     FROM nutrition_facts
+     WHERE product_id = $1
+     ORDER BY updated_at DESC`,
+    [id]
+  );
+  return rows;
+}
