@@ -42,6 +42,11 @@ a {
 
 button {
   font-family: inherit;
+  /* Los navegadores le ponen a <button> un color de texto propio (no
+     hereda de #app/body como un <div>) — sin esto, cualquier botón sin un
+     color explícito (ej. las cards clicables de comparador.js) se ve con
+     texto negro fijo aunque el tema esté en oscuro. */
+  color: inherit;
 }
 
 img, svg {
