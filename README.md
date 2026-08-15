@@ -1,5 +1,7 @@
 # Katö
 
+Este chat de Claude es la versión que manejo en mi MacBook Air portátil, el chat original donde trabajo y modifico este proyecto es mi Mac mini de escritorio, cualquier cambio que se haga desde aquí debería de ser anotado como tal para poder diferenciarlos.
+
 App de nutrición y economía doméstica para Costa Rica. Compara precios y
 datos nutricionales de productos entre supermercados (vía web scraping a
 sus e-commerce oficiales), y usa IA para leer un plan nutricional en PDF y
@@ -56,3 +58,38 @@ Ver `docs/ARCHITECTURE.md` → sección "Cómo levantar el proyecto localmente".
    `apps/scraper/src/db.py`) — el heurístico actual (similitud de texto)
    es un punto de partida, no la solución final; puede fusionar productos
    que en realidad son distintos.
+
+## Notas — sesión MacBook Air
+
+### 2026-08-15 — Continuación del punto 2 (segundo scraper)
+
+Se retomó la investigación de candidatos del punto 2 de arriba. Dos
+descartados, uno pendiente:
+
+- **MegaSuper** — ❌ descartado. Su ToS (`megasuper.com/terminosycondiciones`)
+  prohíbe explícitamente "mecanismos o herramientas automatizadas... cuya
+  finalidad sea realizar la extracción, obtención o recopilación... de
+  cualquier información contenida en el sitio", y nombra literalmente
+  "spiders, robots, avatars o agentes inteligentes" — mismo criterio que
+  cerró Walmart CR.
+- **Super Online Costa Rica** — ❌ descartado. No tiene sitio propio, solo
+  una página de Facebook — no hay catálogo real que scrapear.
+- **Compre Bien** (Palmares, Esparza, San Carlos, Cañas, Grecia) — ⏳
+  **pendiente**. Cadena regional genuinamente independiente (34 años, sin
+  relación con Walmart/Grupo Olímpica), `robots.txt` permisivo y catálogo
+  real por sucursal (nopCommerce). Su plataforma de compra en línea estaba
+  caída al momento de revisarla (las 3 sucursales chequeadas mostraban
+  "Tienda cerrada", incluso bloqueando la página de "Condiciones de uso"),
+  así que no se pudo confirmar el ToS completo. Reintentar cuando esté
+  activa — detalle completo en `apps/scraper/README.md`, sección "Tercera
+  ronda de candidatos". Si el ToS resulta limpio, sería el segundo scraper
+  real del proyecto.
+
+Contexto de mercado (no cambia el análisis anterior): ya existen
+comparadores de precios operando en Costa Rica — **AhorraYa**
+(Next Path Solutions) y **Mi Comparador CR**. AhorraYa monitorea 23
+cadenas incluyendo varias que este proyecto descartó por ToS (Walmart,
+MaxiPalí, Más x Menos, PriceSmart, MegaSuper), y su propio blog dice que
+extrae los datos directamente de los sitios oficiales sin mencionar
+alianzas. Katö mantiene su criterio de respetar el ToS de cada tienda
+independientemente de lo que hagan otros.

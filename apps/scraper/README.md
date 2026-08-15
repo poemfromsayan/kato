@@ -130,6 +130,27 @@ reportes estáticos). El siguiente candidato a evaluar, si se quiere sumar
 más de un supermercado, tendría que ser otro retailer (ver "Próximos
 pasos" en el README raíz del proyecto).
 
+### Tercera ronda de candidatos (2026-08-15, sesión MacBook Air)
+
+| Súper | robots.txt | Términos y condiciones | Decisión |
+|---|---|---|---|
+| **MegaSuper** | No tiene `robots.txt` propio (la ruta cae al shell de la SPA). | Revisados completos en `megasuper.com/terminosycondiciones`. Prohíbe explícitamente: *"la utilización de mecanismos o herramientas automatizadas o tecnología similar cuya finalidad sea realizar la extracción, obtención o recopilación, directa o indirecta, de cualquier información contenida en el sitio"*, y más adelante nombra literalmente *"navegadores, spiders, robots, avatars o agentes inteligentes"* — lenguaje casi idéntico al de Walmart CR. | ❌ **Descartado** — mismo motivo que Walmart CR/MaxiPalí/Más x Menos/Perimercados: prohibición contractual explícita. |
+| **Super Online Costa Rica** | No aplica. | No aplica. | ❌ **Descartado** — no tiene sitio propio, solo una página de Facebook (`facebook.com/SuperOnlineCR`). No hay catálogo propio que scrapear, y aplicaría el ToS de Facebook, no el de un súper. |
+| **Compre Bien** (Palmares, Esparza, San Carlos, Cañas, Grecia) | Permisivo — plataforma nopCommerce por sucursal (ej. `ventaspalmares.comprebien.cr/robots.txt`), solo bloquea rutas típicas de admin/cuenta/checkout, igual de razonable que el de Automercado. | **No confirmado todavía.** Las sucursales revisadas (Palmares, San Carlos, Grecia) mostraban "Tienda cerrada" el día de la revisión (sábado, media mañana — no parece ser un cierre por horario), y esa pantalla bloquea también la ruta de "Condiciones de uso" (`/conditions-of-use`), así que no se pudo leer el texto completo. | ⏳ **Pendiente** — cadena regional genuinamente independiente (34 años, sin relación con Walmart/Grupo Olímpica), con catálogo real y buena señal técnica. Reintentar cuando la plataforma esté activa antes de decidir. |
+
+**Nota sobre el panorama competitivo (2026-08-15):** existen al menos dos
+comparadores de precios ya operando en Costa Rica — **AhorraYa**
+(Next Path Solutions, ahorraya.app) y **Mi Comparador CR**. AhorraYa
+declara monitorear 23 cadenas, incluyendo Walmart, MaxiPalí, Más x Menos,
+PriceSmart y MegaSuper — las mismas que este proyecto descartó por
+prohibición explícita de scraping en su ToS — y su propio blog dice que
+los datos "fueron extraídos directamente de los sitios web oficiales", sin
+mencionar ninguna alianza o API oficial. Esto no cambia el análisis legal
+de Katö: que un competidor asuma ese riesgo no lo reduce para este
+proyecto, que deliberadamente elige respetar el ToS de cada tienda. Se
+deja anotado solo como contexto de mercado, no como justificación para
+revisar las decisiones ya tomadas arriba.
+
 ### Notas técnicas — Automercado (implementado en `scrapers/automercado.py`)
 
 automercado.cr es una SPA: el HTML del servidor viene casi vacío, y el
