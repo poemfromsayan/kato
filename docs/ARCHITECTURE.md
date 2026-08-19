@@ -34,12 +34,21 @@ en el tiempo) es relacional por naturaleza. Postgres además da acceso a
 productos como en el matching de nombres del scraper) sin depender de un
 servicio de búsqueda aparte.
 
-**Dónde entra Claude, y dónde termina su responsabilidad.** Solo en
-`apps/api/src/services/ai/extractPlan.js`, y solo para una tarea: convertir
-un PDF no estructurado en una lista de alimentos/cantidades. La decisión de
-"qué tienda es más barata" es SQL determinístico sobre `price_snapshots`,
-nunca una llamada al modelo — ver la sección correspondiente en
-`DATA_MODEL.md`.
+**Dónde entra Claude, y dónde termina su responsabilidad.** Dos puntos,
+ambos con el mismo rol angosto: convertir algo no estructurado (PDF o foto)
+en datos estructurados, nunca decidir nada que otro código pueda decidir
+determinísticamente.
+- `apps/api/src/services/ai/extractPlan.js` — PDF de un plan nutricional →
+  lista de alimentos/cantidades.
+- `apps/api/src/services/ai/extractProductScan.js` — foto(s) de un producto
+  → nombre/marca/nutrición (ver "Escaneo colaborativo de productos" en
+  `DATA_MODEL.md`). Ni siquiera decide si el producto ya existe en el
+  catálogo — eso es `pg_trgm` — ni escribe directo en `products`: el
+  resultado queda en `product_scans`, pendiente de que un admin lo confirme.
+
+La decisión de "qué tienda es más barata" es SQL determinístico sobre
+`price_snapshots`, nunca una llamada al modelo — ver la sección
+correspondiente en `DATA_MODEL.md`.
 
 ## El sistema de diseño no es parte del código de la app
 
@@ -64,7 +73,15 @@ tiempo de ejecución.
   nunca interpolación de strings.
 - El PDF subido nunca se guarda en la base de datos — solo una referencia a
   almacenamiento de archivos (`services/storage/fileStorage.js`, hoy en
-  disco local, pensado para moverse a un bucket en producción).
+  disco local, pensado para moverse a un bucket en producción). Las fotos
+  de un escaneo de producto siguen el mismo criterio, y además se sirven
+  autenticadas (`GET /product-scans/:id/image/:type`, solo admin) en vez de
+  por una ruta estática pública — ver "Escaneo colaborativo de productos"
+  en `DATA_MODEL.md`.
+- `is_admin` (tabla `users`) nunca viaja en el JWT — se consulta fresca
+  contra la base en cada petición admin (`requireAdmin`), para que revocar
+  el permiso sea inmediato y no dependa de que expire un token de 2h. No
+  hay endpoint para otorgarlo: solo `scripts/makeAdmin.js`, corrido a mano.
 - Variables de entorno se validan al arrancar (`config/env.js` en Node,
   `config.py` en Python) — el proceso falla rápido y con mensaje claro si
   falta algo, en vez de fallar a medias más adelante.
@@ -84,6 +101,7 @@ cp .env.example .env   # completar DATABASE_URL, JWT_SECRET (ANTHROPIC_API_KEY e
 npm install
 npm run migrate
 npm run seed            # datos de prueba ficticios (tiendas, productos, precios) — opcional pero recomendado para ver la app con contenido
+npm run make-admin -- tu@correo.com   # opcional: para poder entrar a /admin/escaneos
 npm run dev              # http://localhost:3001
 
 # 2. Frontend (en otra terminal)
@@ -98,7 +116,13 @@ cp .env.example .env
 python -m pytest tests/
 ```
 
+`npm test` (dentro de `apps/api`) corre los tests de los dos servicios de IA
+(`extractPlan.js`, `extractProductScan.js`) contra un cliente de Anthropic
+mockeado — no necesitan Postgres ni una API key real, solo verifican que la
+extracción respeta el schema esperado.
+
 `ANTHROPIC_API_KEY` es opcional: sin ella, toda la app funciona normal excepto
-"Subir plan nutricional" (devuelve un error claro en vez de romper el arranque).
+"Subir plan nutricional" y "Escanear producto" (devuelven un error 503 claro
+en vez de romper el arranque).
 `npm run seed` no borra datos existentes — si la tabla `stores` ya tiene filas,
 no hace nada (para no pisar datos reales por accidente).

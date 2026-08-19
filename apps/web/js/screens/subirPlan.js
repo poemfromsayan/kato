@@ -8,7 +8,7 @@ import { Alert, Button, Spinner } from '../components/index.js';
 import { api, ApiError } from '../lib/apiClient.js';
 
 export function renderSubirPlanScreen(container) {
-  const screen = div({}, container);
+  const screen = div({ className: 'screen--narrow' }, container);
 
   h1({ className: 'screen-title' }, screen, 'Subir plan nutricional');
   p({ className: 'screen-subtitle' }, screen, 'Subí el PDF de tu plan y lo convertimos en una lista de alimentos.');

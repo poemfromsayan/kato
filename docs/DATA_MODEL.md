@@ -28,6 +28,79 @@ Postgres relacional. Estas son las tablas centrales y por qué existen.
 
 > **Limitación conocida:** `preference_used` guarda la preferencia del usuario (`price` / `quality` / `balance`), pero HOY la resolución de "mejor tienda" siempre usa precio más bajo — no existe todavía ninguna señal real de calidad por tienda en el schema (reputación, frescura, etc.), así que `quality`/`balance` no tienen lógica propia por ahora. Ídem para el comparador (`modules/prices`): resalta la tienda más barata sin importar la preferencia guardada. Corregir esto requiere primero decidir qué dato real va a representar "calidad".
 
+## Escaneo colaborativo de productos
+
+Si un usuario no encuentra un producto en Katö, puede fotografiarlo (empaque
++, opcionalmente, su tabla nutricional) para proponerlo. El principio es el
+mismo que en toda la app: **una foto de un usuario nunca es un hecho
+verificado**, así que nunca escribe directo en `products`/`nutrition_facts`.
+
+**`product_scans`** — cola de revisión. Guarda las rutas a las dos fotos
+(`package_image_path`, `nutrition_image_path` — nunca el binario, mismo
+criterio que `nutrition_plans.storage_path`), lo que Claude vision extrajo
+de ellas (`extracted_*`, ver `apps/api/src/services/ai/extractProductScan.js`),
+un posible `matched_product_id` (resuelto por similaridad de texto con
+`pg_trgm`, igual que el matching de `plan_items` — nunca decidido por el
+modelo), y el estado del review (`status`: `pending` / `approved` /
+`rejected`, más `reviewed_by`/`reviewed_at`/`rejection_reason`/`resulting_product_id`).
+
+**`users.is_admin`** — columna simple (no hay tabla de roles todavía)
+que habilita `requireAdmin` (`apps/api/src/middleware/auth.js`) para
+aprobar/rechazar escaneos. Deliberadamente NO viaja en el JWT — se
+consulta fresca contra la base en cada petición, para que revocar el
+permiso sea inmediato en vez de esperar a que expire un token de 2h. No
+existe endpoint para volverse admin: se otorga solo de forma local con
+`apps/api/scripts/makeAdmin.js` (`npm run make-admin -- email@ejemplo.com`),
+a propósito, para minimizar la superficie de ataque.
+
+**Qué pasa al aprobar un escaneo** (`approveScan` en
+`modules/product-scans/repository.js`, transaccional): si el escaneo no
+tenía `matched_product_id`, crea un `products` nuevo con los datos que el
+admin confirmó (puede haber corregido lo que Claude leyó); si sí lo tenía,
+completa/actualiza la ficha nutricional de ESE producto vía
+`ON CONFLICT (product_id, serving_size) DO UPDATE`. En ambos casos el
+`nutrition_facts.source` que queda es `'crowdsourced'` (nuevo valor del
+enum `nutrition_source`, distinto de `scraped`/`manual`/`estimated`) — así
+el frontend siempre puede distinguir "esto lo confirmó un admin a partir
+de una foto de un usuario" de "esto viene de una tabla oficial" (`manual`).
+
+**Por qué las fotos se sirven autenticadas y no por una URL pública**: un
+UUID en el nombre de archivo ya evita que alguien adivine la ruta, pero
+igual se decidió no montar `uploads/product-scans` como estático — las
+fotos de un escaneo solo las necesita ver un admin durante la revisión, así
+que `GET /product-scans/:id/image/:type` exige `requireAuth` +
+`requireAdmin` y transmite el archivo con `res.sendFile`. El frontend no
+puede usar un `<img src="...">` directo contra esa ruta (el navegador no
+manda el header `Authorization` en pedidos de imagen), así que la trae con
+`fetch` y arma un object URL (`apps/web/js/lib/apiClient.js#getBlob`).
+
+## Open Food Facts como fuente complementaria
+
+**Legitimidad confirmada:** asociación sin fines de lucro francesa (ley
+1901), fundada en 2012 por Stéphane Gigandet. Sus datos están bajo licencia
+ODbL — reuso libre, incluso comercial, con atribución y "compartir igual".
+Tiene un subdominio específico para Costa Rica (`cr.openfoodfacts.org`) con
+productos reales de marcas locales, y una API de contribución documentada
+(relevante para la tarea #53: aportar datos de vuelta).
+
+**Cobertura verificada para las marcas del seed de Katö** (vía
+`cgi/search.pl?search_terms=...&json=1`, 2026-08-21):
+
+| Marca | Resultado |
+|---|---|
+| Dos Pinos | ✅ Buena cobertura — varios productos reales (Delactomy, Leche Semidescremada, Queso Crema, Leche+proteína, etc.) |
+| Bimbo | ✅ Buena cobertura — Pan Blanco Artesano, Pan Cuadrado, Pan integral, etc. |
+| Pipasa | ✅ 2 productos con macros reales (Filetes de Pechuga de Pollo: 152kcal/100g; Pollo Mechado: 110kcal/100g) |
+| Tío Pelón | ✅ 5 productos, incluye un "Arroz" cuyos macros coinciden bien con el valor INCAP que ya usamos en el seed (163kcal, 3g proteína, 35.7g carbs/100g) |
+| Cocinero | ❌ 0 resultados |
+| CATSA, Sardimar, Café Rey, Quaker, Yema Dorada, Del Monte | ⏳ **Pendiente** — la API anónima de Open Food Facts empezó a devolver "Page temporarily unavailable" (límite de tasa para usuarios no autenticados) a mitad de la revisión. Reintentar más tarde, o crear una cuenta de aportante para levantar el límite. |
+
+**Conclusión preliminar:** cobertura real y útil para las marcas
+grandes/nacionales (Dos Pinos, Bimbo, Pipasa, Tío Pelón), pero desigual —
+no hay que asumir que todo el catálogo de Katö va a tener match ahí. Sirve
+como fuente complementaria de nutrición, no como reemplazo de INCAP/USDA
+para lo que ya está sourceado a mano.
+
 ## Por qué la IA no toca `price_snapshots`
 
 El límite de responsabilidad es intencional: Claude solo lee un PDF no estructurado y devuelve una lista de alimentos/cantidades (una tarea de comprensión de lenguaje, donde un LLM aporta valor real). Decidir "cuál tienda es más barata" es una consulta SQL determinística sobre datos que sí verificamos por scraping. Si el modelo alucinara un precio, nunca llega a mostrarse como precio real porque vive en una columna distinta (`price_range_min/max` en `plan_items`, claramente separada de `price_snapshots`).

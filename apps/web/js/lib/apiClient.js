@@ -57,9 +57,47 @@ export async function apiFetch(path, options = {}) {
   return data;
 }
 
+/**
+ * Para endpoints que devuelven binarios (ej. las fotos de un escaneo, ver
+ * GET /product-scans/:id/image/:type) en vez de JSON. Un <img src="..."
+ * directo no funcionaría porque el navegador no adjunta el header
+ * Authorization en pedidos de imagen — así que lo traemos nosotros con
+ * fetch() y el caller arma un object URL con el blob resultante.
+ */
+async function apiFetchBlob(path) {
+  const headers = {};
+  const token = getToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, { headers });
+  } catch {
+    throw new ApiError(0, 'No se pudo conectar con el servidor. ¿Está corriendo la API?');
+  }
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      clearSession();
+      window.dispatchEvent(new CustomEvent('katofit:unauthorized'));
+    }
+    let message = 'No se pudo cargar el archivo';
+    try {
+      const data = await response.json();
+      message = data?.error || message;
+    } catch {
+      // La respuesta no era JSON — nos quedamos con el mensaje genérico.
+    }
+    throw new ApiError(response.status, message);
+  }
+
+  return response.blob();
+}
+
 export const api = {
   get: (path) => apiFetch(path),
   post: (path, body) => apiFetch(path, { method: 'POST', body }),
   patch: (path, body) => apiFetch(path, { method: 'PATCH', body }),
   postForm: (path, formData) => apiFetch(path, { method: 'POST', body: formData, isFormData: true }),
+  getBlob: (path) => apiFetchBlob(path),
 };

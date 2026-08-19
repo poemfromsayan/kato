@@ -4,18 +4,21 @@ Este chat de Claude es la versión que manejo en mi MacBook Air portátil, el ch
 
 App de nutrición y economía doméstica para Costa Rica. Compara precios y
 datos nutricionales de productos entre supermercados (vía web scraping a
-sus e-commerce oficiales), y usa IA para leer un plan nutricional en PDF y
+sus e-commerce oficiales), usa IA para leer un plan nutricional en PDF y
 convertirlo en una lista de compras según precio, calidad, o un balance
-entre ambos.
+entre ambos, y deja que los propios usuarios sumen productos que falten
+tomándoles una foto — esas fotos pasan por una cola de revisión (ver
+"Escaneo colaborativo de productos" en `docs/DATA_MODEL.md`) antes de
+tocar el catálogo real.
 
 ## Estructura
 
 | Carpeta | Qué es | Estado |
 |---|---|---|
 | `design-system/` | Sistema de diseño (HTML/CSS/JS de un solo archivo) — tokens y componentes ya elegidos. | ✅ Listo |
-| `apps/api/` | Backend: Node.js + Express + PostgreSQL. | ✅ Auth, productos, precios, planes nutricionales (subir/listar/detalle) |
+| `apps/api/` | Backend: Node.js + Express + PostgreSQL. | ✅ Auth, productos, precios, planes nutricionales, listas de compras, escaneo colaborativo (submit/revisión admin) |
 | `apps/scraper/` | Scraper de precios/productos en Python. | ✅ Automercado real implementado y verificado (200 productos reales); MaxiPalí/Walmart/Más x Menos descartados por ToS, PriceSmart pendiente (ver su README) |
-| `apps/web/` | Frontend de la app (html.js, SPA con router propio). | ✅ Login/registro, dashboard, comparador, subir plan, perfil/preferencias — probado end-to-end |
+| `apps/web/` | Frontend de la app (html.js, SPA con router propio). | ✅ Login/registro, dashboard, comparador (con info nutricional), subir plan, escanear producto, perfil, revisión de escaneos (admin) |
 | `docs/` | `ARCHITECTURE.md` y `DATA_MODEL.md` — por qué está construido así. | ✅ |
 
 ## Empezar
@@ -58,6 +61,14 @@ Ver `docs/ARCHITECTURE.md` → sección "Cómo levantar el proyecto localmente".
    `apps/scraper/src/db.py`) — el heurístico actual (similitud de texto)
    es un punto de partida, no la solución final; puede fusionar productos
    que en realidad son distintos.
+6. Probar en vivo el escaneo colaborativo de productos y "Subir plan
+   nutricional" (ambos dependen de Claude vision/texto — falta cargar
+   crédito real en la cuenta de Anthropic para probarlos end-to-end).
+   Antes de eso, en cualquier máquina nueva hay que correr
+   `npm run migrate` (agrega `product_scans` y `users.is_admin`, ver
+   `apps/api/src/db/migrations/0002_product_scans.sql`) y
+   `npm run make-admin -- tu@correo.com` para poder ver la pantalla
+   `/admin/escaneos`.
 
 ## Notas — sesión MacBook Air
 

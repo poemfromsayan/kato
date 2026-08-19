@@ -120,8 +120,20 @@ export function renderDashboardScreen(container) {
       // plans ya viene ordenado por uploaded_at DESC (ver repository.js)
       const [latestPlan, ...olderPlans] = plans;
       const listSummary = shoppingLists.find((l) => l.plan_id === latestPlan.id);
+      const pastLists = shoppingLists.filter((l) => l.id !== listSummary?.id);
+      const hasSideContent = olderPlans.length > 0 || pastLists.length > 0;
 
-      const planCard = div({ className: 'card' }, contentSlot);
+      // En desktop (ver .dashboard-grid en components.css), mainCol es la
+      // columna principal (plan activo + su lista de compras) y sideCol
+      // una columna lateral angosta (otros planes, historial). En mobile
+      // .dashboard-grid es un simple bloque, así que ambas quedan
+      // apiladas en el mismo orden de siempre — no hay side si no hay
+      // nada que mostrar ahí, para no dejar una columna vacía.
+      contentSlot.className = hasSideContent ? 'dashboard-grid' : '';
+      const mainCol = div({}, contentSlot);
+      const sideCol = hasSideContent ? div({}, contentSlot) : mainCol;
+
+      const planCard = div({ className: 'card' }, mainCol);
       const planHeader = div(
         { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-3)' } },
         planCard
@@ -145,7 +157,7 @@ export function renderDashboardScreen(container) {
       // SIEMPRE fuera de planCard, como su propia sección — ver el
       // comentario en renderGenerateAction sobre por qué no anidar cards.
       if (latestPlan.status === 'parsed') {
-        const resultSlot = div({}, contentSlot);
+        const resultSlot = div({}, mainCol);
 
         if (listSummary) {
           Spinner({ parent: resultSlot });
@@ -159,7 +171,7 @@ export function renderDashboardScreen(container) {
       }
 
       if (olderPlans.length > 0) {
-        const section = div({ style: { marginTop: 'var(--space-6)' } }, contentSlot);
+        const section = div({ style: { marginTop: 'var(--space-6)' } }, sideCol);
         subheading('Otros planes que subiste', section);
         olderPlans.forEach((plan) => {
           const row = div({ className: 'plan-item-row' }, section);
@@ -169,7 +181,7 @@ export function renderDashboardScreen(container) {
         });
       }
 
-      renderHistory(shoppingLists, listSummary?.id, contentSlot);
+      renderHistory(shoppingLists, listSummary?.id, sideCol);
     })
     .catch((err) => {
       contentSlot.innerHTML = '';

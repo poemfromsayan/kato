@@ -2,6 +2,17 @@
  * components.css — Componentes de UI de la app Katö.
  * Subconjunto de design-system/css/components.css adaptado a la app real
  * (sin las clases .ds-* que eran solo para la página de exploración).
+ *
+ * Breakpoints (mobile-first, sin variables CSS porque @media no las lee):
+ *   768px  — "tablet": el contenido se ensancha, las grillas de tarjetas
+ *            (.results-grid) empiezan a mostrar varias columnas.
+ *   1024px — "desktop": la navegación pasa de topbar+bottom-nav (mobile) a
+ *            un sidebar fijo a la izquierda (ver .sidebar); el dashboard
+ *            pasa a 2 columnas (.dashboard-grid).
+ *   1280px — "desktop ancho": el contenido crece un poco más.
+ * Las pantallas tipo formulario (login, perfil, subir plan, escanear) no
+ * usan estos anchos extra — se quedan angostas y centradas (.screen--narrow)
+ * porque un formulario de un campo por línea no gana nada siendo ancho.
  */
 
 /* ===================== App shell ===================== */
@@ -58,6 +69,58 @@ html, body {
   max-width: 480px;
   margin: 0 auto;
   padding: var(--space-5) var(--space-4) calc(var(--space-16) + var(--space-8));
+}
+
+/* ===================== Sidebar (nav de desktop) =====================
+ * Reemplaza a app-topbar + bottom-nav en pantallas grandes — mismos
+ * NAV_ITEMS, ver components/nav.js#Sidebar. Oculto por defecto (mobile);
+ * se activa en el breakpoint de desktop más abajo.
+ */
+
+.sidebar {
+  display: none;
+  flex-direction: column;
+  width: 240px;
+  flex-shrink: 0;
+  padding: var(--space-6) var(--space-4);
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-6);
+}
+
+.sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.sidebar__item:hover { background: var(--surface-2); color: var(--text); }
+.sidebar__item--active { background: var(--accent-100); color: var(--accent-700); }
+.sidebar__item-icon { font-size: 18px; }
+
+.sidebar__footer {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
 }
 
 /* ===================== Botones ===================== */
@@ -339,6 +402,69 @@ html, body {
   margin-top: var(--space-2);
 }
 
+/* ===================== Pantalla de escaneo ===================== */
+
+.scan-slot {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+
+.scan-slot:hover {
+  border-color: var(--accent-500);
+  background: var(--accent-100);
+}
+
+.scan-slot--filled {
+  border-style: solid;
+  cursor: default;
+}
+
+.scan-slot__placeholder {
+  text-align: center;
+  color: var(--text-subtle);
+  font-size: var(--fs-caption);
+  padding: var(--space-4);
+}
+
+.scan-slot__placeholder-icon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.scan-slot__preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.scan-slot__remove {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: color-mix(in srgb, black 55%, transparent);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ===================== Pantalla de auth ===================== */
 
 .auth-screen {
@@ -346,6 +472,9 @@ html, body {
   flex-direction: column;
   justify-content: center;
   min-height: calc(100dvh - 64px);
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .auth-tabs {
@@ -388,6 +517,46 @@ html, body {
   margin-bottom: var(--space-6);
 }
 
+/* Pantallas tipo formulario (login, perfil, subir plan, escanear): se
+ * quedan angostas y centradas incluso cuando .app-main crece en desktop. */
+.screen--narrow {
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Grillas de tarjetas (resultados del comparador, cola de revisión de
+ * escaneos): en mobile es una sola columna (comportamiento por defecto de
+ * un div), desde tablet se acomoda en tantas columnas de ~280px como
+ * quepan. auto-fit (no auto-fill) a propósito: con pocos ítems (ej. un
+ * solo spinner, alerta o EmptyState mientras carga) el/los item(s) ocupan
+ * todo el ancho en vez de quedar pegados a la izquierda con columnas
+ * fantasma vacías al lado. */
+@media (min-width: 768px) {
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-4);
+    align-items: start;
+  }
+
+  .results-grid > .card {
+    margin-bottom: 0;
+  }
+}
+
+/* Dashboard: columna principal (plan activo + lista de compras) + columna
+ * lateral (otros planes, historial). En mobile son simplemente dos bloques
+ * apilados en el mismo orden que ya tenían — ver screens/dashboard.js. */
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-6);
+    align-items: start;
+  }
+}
+
 .plan-item-row {
   display: flex;
   justify-content: space-between;
@@ -400,3 +569,32 @@ html, body {
 .plan-item-row:last-child { border-bottom: none; }
 .plan-item-row__name { color: var(--text); }
 .plan-item-row__meta { color: var(--text-subtle); font-family: var(--font-mono); font-size: var(--fs-micro); }
+
+/* ===================== Breakpoints — app shell =====================
+ * A propósito al FINAL del archivo: .app-topbar y .bottom-nav tienen su
+ * regla base más arriba (misma especificidad, 1 clase) — en CSS, entre
+ * dos reglas con la misma especificidad gana la que aparece después en
+ * el archivo, sin importar si está dentro de un @media o no. Si este
+ * bloque quedara antes de esas reglas base, el "display: none" de acá
+ * perdería siempre contra el "display: flex" de la regla base.
+ */
+
+@media (min-width: 768px) {
+  .app-main { max-width: 640px; }
+}
+
+@media (min-width: 1024px) {
+  .app-shell { flex-direction: row; align-items: stretch; }
+  .sidebar { display: flex; }
+  .app-topbar { display: none; }
+  .bottom-nav { display: none; }
+  .app-main {
+    max-width: 900px;
+    margin: 0;
+    padding: var(--space-8);
+  }
+}
+
+@media (min-width: 1280px) {
+  .app-main { max-width: 1100px; }
+}

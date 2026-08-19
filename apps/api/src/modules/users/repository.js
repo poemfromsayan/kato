@@ -2,7 +2,7 @@ import { query } from '../../db/pool.js';
 
 export async function findUserByEmail(email) {
   const { rows } = await query(
-    `SELECT id, email, password_hash, display_name, price_quality_preference
+    `SELECT id, email, password_hash, display_name, price_quality_preference, is_admin
      FROM users WHERE email = $1`,
     [email]
   );
@@ -13,7 +13,7 @@ export async function createUser({ email, passwordHash, displayName }) {
   const { rows } = await query(
     `INSERT INTO users (email, password_hash, display_name)
      VALUES ($1, $2, $3)
-     RETURNING id, email, display_name, price_quality_preference`,
+     RETURNING id, email, display_name, price_quality_preference, is_admin`,
     [email, passwordHash, displayName ?? null]
   );
   return rows[0];
@@ -21,7 +21,7 @@ export async function createUser({ email, passwordHash, displayName }) {
 
 export async function findUserById(id) {
   const { rows } = await query(
-    `SELECT id, email, display_name, price_quality_preference
+    `SELECT id, email, display_name, price_quality_preference, is_admin
      FROM users WHERE id = $1`,
     [id]
   );
@@ -54,7 +54,7 @@ export async function updateUser(id, fields) {
   const { rows } = await query(
     `UPDATE users SET ${setClauses.join(', ')}, updated_at = now()
      WHERE id = $${values.length}
-     RETURNING id, email, display_name, price_quality_preference`,
+     RETURNING id, email, display_name, price_quality_preference, is_admin`,
     values
   );
   return rows[0] ?? null;

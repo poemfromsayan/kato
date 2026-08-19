@@ -18,8 +18,12 @@ export function renderComparadorScreen(container) {
   const searchInput = TextInput({ placeholder: 'Ej. arroz, pollo, leche…', icon: '🔍' });
   Field({ control: searchInput, parent: screen });
 
-  const resultsSlot = div({}, screen);
-  const detailSlot = div({}, screen);
+  // .results-grid: en mobile es una columna normal; desde tablet acomoda
+  // varias tarjetas por fila (ver components.css). .screen--narrow en
+  // detailSlot evita que la tarjeta de un solo producto seleccionado se
+  // estire a lo ancho de toda la pantalla en desktop.
+  const resultsSlot = div({ className: 'results-grid' }, screen);
+  const detailSlot = div({ className: 'screen--narrow' }, screen);
 
   let debounceTimer = null;
   let requestToken = 0;

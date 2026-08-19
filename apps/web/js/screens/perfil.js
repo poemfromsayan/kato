@@ -23,7 +23,7 @@ const PREFERENCE_HELP = {
 
 export function renderPerfilScreen(container) {
   const user = getUser();
-  const screen = div({}, container);
+  const screen = div({ className: 'screen--narrow' }, container);
 
   h1({ className: 'screen-title' }, screen, 'Perfil y preferencias');
   p({ className: 'screen-subtitle' }, screen, 'Esto define cómo Katö elige la "mejor" tienda por vos.');
